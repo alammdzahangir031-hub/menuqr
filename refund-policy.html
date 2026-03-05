@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refund Policy — MenuQR</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Jost', sans-serif; background: #FFFFFF; color: #1A1A1A; font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.97); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.08); padding: 0 48px; height: 68px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; color: #1A1A1A; text-decoration: none; }
+  .nav-logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg,#2C742F,#3A9E3F); border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+  .nav-back { display: flex; align-items: center; gap: 6px; color: #2C742F; font-size: 14px; font-weight: 600; text-decoration: none; padding: 8px 18px; border: 1.5px solid rgba(44,116,47,0.25); border-radius: 100px; transition: all 0.2s; }
+  .nav-back:hover { background: rgba(44,116,47,0.06); border-color: #2C742F; }
+  .legal-hero { background: linear-gradient(135deg, #f8fdf8, #f0f7f0); border-bottom: 1px solid rgba(44,116,47,0.12); padding: 64px 48px 56px; text-align: center; }
+  .legal-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(44,116,47,0.08); border: 1px solid rgba(44,116,47,0.2); color: #2C742F; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; }
+  .legal-hero h1 { font-size: clamp(30px,4vw,48px); font-weight: 800; color: #1A1A1A; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 14px; }
+  .legal-hero p { color: #6B7280; font-size: 15px; max-width: 520px; margin: 0 auto; }
+  .legal-meta { display: flex; align-items: center; justify-content: center; gap: 24px; margin-top: 24px; flex-wrap: wrap; }
+  .legal-meta span { font-size: 13px; color: #9CA3AF; display: flex; align-items: center; gap: 6px; }
+  .legal-meta span strong { color: #4A4A4A; }
+  .legal-wrap { max-width: 820px; margin: 0 auto; padding: 64px 24px 100px; }
+  .toc { background: #F8F8F8; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 28px 32px; margin-bottom: 56px; }
+  .toc h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #9CA3AF; margin-bottom: 16px; }
+  .toc ol { padding-left: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .toc ol li { font-size: 14px; }
+  .toc ol li a { color: #2C742F; text-decoration: none; font-weight: 500; }
+  .toc ol li a:hover { text-decoration: underline; }
+  .legal-section { margin-bottom: 52px; padding-bottom: 52px; border-bottom: 1px solid rgba(0,0,0,0.07); }
+  .legal-section:last-of-type { border-bottom: none; }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg,#2C742F,#3A9E3F); color: #fff; font-size: 13px; font-weight: 700; border-radius: 8px; margin-bottom: 12px; }
+  .legal-section h2 { font-size: 22px; font-weight: 700; color: #1A1A1A; margin-bottom: 16px; line-height: 1.3; }
+  .legal-section p { color: #4A4A4A; font-size: 15.5px; line-height: 1.8; margin-bottom: 14px; }
+  .legal-section p:last-child { margin-bottom: 0; }
+  .legal-section ul, .legal-section ol { padding-left: 22px; margin: 12px 0 14px; }
+  .legal-section li { color: #4A4A4A; font-size: 15px; line-height: 1.8; margin-bottom: 6px; }
+  .legal-section strong { color: #1A1A1A; font-weight: 600; }
+  .legal-section a { color: #2C742F; }
+  .highlight-box { background: rgba(44,116,47,0.05); border: 1.5px solid rgba(44,116,47,0.18); border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+  .highlight-box p { color: #2C742F; font-weight: 500; margin: 0; font-size: 15px; }
+  .warning-box { background: rgba(239,68,68,0.04); border: 1.5px solid rgba(239,68,68,0.15); border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+  .warning-box p { color: #DC2626; font-weight: 500; margin: 0; font-size: 14.5px; }
+  /* Scenario cards */
+  .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .scenario-card { border-radius: 14px; padding: 20px; }
+  .scenario-card.yes { background: rgba(44,116,47,0.05); border: 1.5px solid rgba(44,116,47,0.2); }
+  .scenario-card.no { background: rgba(239,68,68,0.04); border: 1.5px solid rgba(239,68,68,0.15); }
+  .scenario-card h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .scenario-card.yes h4 { color: #2C742F; }
+  .scenario-card.no h4 { color: #DC2626; }
+  .scenario-card li { font-size: 13.5px; line-height: 1.7; color: #4A4A4A; margin-bottom: 6px; }
+  /* Steps */
+  .steps { margin: 20px 0; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+  .step-num { width: 32px; height: 32px; min-width: 32px; background: linear-gradient(135deg,#2C742F,#3A9E3F); border-radius: 50%; color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step-text h4 { font-size: 15px; font-weight: 700; color: #1A1A1A; margin-bottom: 4px; }
+  .step-text p { font-size: 14px; color: #6B7280; margin: 0; line-height: 1.6; }
+  .contact-card { background: linear-gradient(135deg, #1E5621, #2C742F); border-radius: 20px; padding: 40px; text-align: center; margin-top: 64px; }
+  .contact-card h3 { color: #fff; font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .contact-card p { color: rgba(255,255,255,0.75); font-size: 15px; margin-bottom: 24px; }
+  .contact-card a { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: #2C742F; font-weight: 700; font-size: 15px; padding: 12px 28px; border-radius: 100px; text-decoration: none; transition: all 0.2s; }
+  .contact-card a:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+  footer { background: #1A1A1A; padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  footer p { color: rgba(255,255,255,0.4); font-size: 13px; }
+  .footer-legal-links { display: flex; gap: 20px; flex-wrap: wrap; }
+  .footer-legal-links a { color: rgba(255,255,255,0.45); font-size: 13px; text-decoration: none; }
+  .footer-legal-links a:hover { color: rgba(255,255,255,0.8); }
+  .footer-legal-links a.active { color: #3A9E3F; font-weight: 600; }
+  @media (max-width: 640px) { nav { padding: 0 20px; } .legal-hero { padding: 48px 20px 40px; } .toc ol { grid-template-columns: 1fr; } .scenario-grid { grid-template-columns: 1fr; } footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">▦</div>MenuQR
+  </a>
+  <a href="index.html" class="nav-back">← Back to Home</a>
+</nav>
+
+<div class="legal-hero">
+  <div class="legal-tag">💳 Legal Document</div>
+  <h1>Refund Policy</h1>
+  <p>Clear, fair rules on refunds and cancellations. No confusing fine print.</p>
+  <div class="legal-meta">
+    <span>📅 <strong>Effective Date:</strong> January 1, 2026</span>
+    <span>🔄 <strong>Last Updated:</strong> January 1, 2026</span>
+    <span>⏱️ <strong>Response Time:</strong> 3–5 business days</span>
+  </div>
+</div>
+
+<div class="legal-wrap">
+
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#s1">Our Commitment</a></li>
+      <li><a href="#s2">Free Trial Policy</a></li>
+      <li><a href="#s3">Monthly Plan Refunds</a></li>
+      <li><a href="#s4">Annual Plan Refunds</a></li>
+      <li><a href="#s5">When Refunds Are Not Issued</a></li>
+      <li><a href="#s6">Service Issues & Credits</a></li>
+      <li><a href="#s7">How to Request a Refund</a></li>
+      <li><a href="#s8">Processing & Timeline</a></li>
+    </ol>
+  </div>
+
+  <div class="highlight-box">
+    <p>✅ Our goal is simple: if MenuQR doesn't work for your restaurant, we don't want your money. We'd rather give you a refund than have an unhappy customer.</p>
+  </div>
+
+  <!-- Section 1 -->
+  <div class="legal-section" id="s1">
+    <div class="section-num">1</div>
+    <h2>Our Commitment</h2>
+    <p>MenuQR operates on a subscription model. We believe in being transparent and fair about refunds. We are a small team based in Chittagong, Bangladesh, and we value every customer relationship.</p>
+    <p>This policy applies to all paid subscriptions purchased directly through MenuQR. If you subscribed through a third-party reseller or partner, their refund policy applies.</p>
+    <p>All amounts are in Bangladeshi Taka (BDT) unless otherwise specified.</p>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="legal-section" id="s2">
+    <div class="section-num">2</div>
+    <h2>Free Trial Policy</h2>
+    <p>All MenuQR plans come with a <strong>14-day free trial</strong> with full access to all features. No credit card is required to start.</p>
+    <ul>
+      <li>You will not be charged anything during the trial period</li>
+      <li>If you cancel before the trial ends, you will never be charged</li>
+      <li>If you do not cancel, your subscription automatically begins at the end of the trial and payment is collected</li>
+      <li>Once a paid billing cycle begins, the refund policy below applies</li>
+    </ul>
+    <div class="highlight-box">
+      <p>💡 Tip: Use the full 14 days to test MenuQR with your actual restaurant. We encourage this — real-world testing is the best way to know if it's right for you.</p>
+    </div>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="legal-section" id="s3">
+    <div class="section-num">3</div>
+    <h2>Monthly Plan Refunds</h2>
+    <p>For monthly subscribers:</p>
+    <ul>
+      <li><strong>Within 7 days of payment:</strong> Full refund, no questions asked. If you signed up, were charged, and realized MenuQR isn't right for your restaurant within 7 days, we will refund you completely.</li>
+      <li><strong>After 7 days:</strong> Refunds are not issued for the current billing period. You may cancel at any time and your access continues until the end of the paid period.</li>
+      <li><strong>Technical failure:</strong> If MenuQR was completely unavailable for more than 24 consecutive hours in a billing period due to our fault, we will issue a pro-rated credit or refund for those days.</li>
+    </ul>
+    <div class="warning-box">
+      <p>⚠️ Monthly subscriptions are not refundable after the 7-day window except in cases of documented service failure on our end.</p>
+    </div>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="legal-section" id="s4">
+    <div class="section-num">4</div>
+    <h2>Annual Plan Refunds</h2>
+    <p>For annual subscribers (who pay 12 months upfront at a 25% discount):</p>
+    <ul>
+      <li><strong>Within 14 days of payment:</strong> Full refund, no questions asked.</li>
+      <li><strong>15 days to 3 months:</strong> Pro-rated refund for the remaining unused months, minus a 10% processing fee.</li>
+      <li><strong>After 3 months:</strong> No refund is issued. You retain access until the end of your annual period.</li>
+    </ul>
+    <p><strong>Example:</strong> If you pay for an annual plan and cancel after 2 months, you would receive a refund for the remaining 10 months minus the processing fee.</p>
+    <div class="highlight-box">
+      <p>📌 Annual plans offer the best value. We recommend starting with a monthly plan first if you are unsure, then upgrading to annual once you are satisfied.</p>
+    </div>
+  </div>
+
+  <!-- Section 5 -->
+  <div class="legal-section" id="s5">
+    <div class="section-num">5</div>
+    <h2>When Refunds Are Not Issued</h2>
+    <p>We cannot issue refunds in the following situations:</p>
+
+    <div class="scenario-grid">
+      <div class="scenario-card yes">
+        <h4>✅ Eligible for Refund</h4>
+        <ul>
+          <li>Within 7 days of monthly payment</li>
+          <li>Within 14 days of annual payment</li>
+          <li>Proven service outage (&gt;24 hrs)</li>
+          <li>Duplicate accidental charge</li>
+          <li>Charged after cancellation confirmed</li>
+        </ul>
+      </div>
+      <div class="scenario-card no">
+        <h4>❌ Not Eligible</h4>
+        <ul>
+          <li>Changed your mind after the window</li>
+          <li>Didn't use the service during the period</li>
+          <li>Account suspended for Terms violation</li>
+          <li>Forgot to cancel before renewal</li>
+          <li>Dissatisfied with a specific feature</li>
+          <li>Business closed or slow season</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>If you are unsatisfied with a specific feature, please contact us — we may be able to resolve your issue, add it to our roadmap, or find a workaround.</p>
+  </div>
+
+  <!-- Section 6 -->
+  <div class="legal-section" id="s6">
+    <div class="section-num">6</div>
+    <h2>Service Issues & Credits</h2>
+    <p>MenuQR aims for 99.5% uptime. If we fall short due to issues on our end, here is how we handle it:</p>
+    <ul>
+      <li><strong>Outage under 2 hours:</strong> No credit issued, but we will communicate transparently about the cause</li>
+      <li><strong>Outage 2–24 hours:</strong> 1-week account credit added automatically</li>
+      <li><strong>Outage over 24 hours:</strong> Pro-rated refund or credit for affected days, issued automatically within 7 days</li>
+      <li><strong>WhatsApp delivery failures:</strong> If WhatsApp itself (Meta) experiences an outage, this is outside MenuQR's control and not eligible for refund. We will notify you of known WhatsApp issues.</li>
+    </ul>
+    <p>Service credits are applied to your account and used against your next billing cycle. Credits cannot be converted to cash.</p>
+  </div>
+
+  <!-- Section 7 -->
+  <div class="legal-section" id="s7">
+    <div class="section-num">7</div>
+    <h2>How to Request a Refund</h2>
+    <p>Requesting a refund is straightforward. Contact us using any of these methods:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <h4>Contact us via WhatsApp or email</h4>
+          <p>WhatsApp: <a href="https://wa.me/8801700000000">+880 1700-000000</a> | Email: <a href="mailto:hello@menuqr.com.bd">hello@menuqr.com.bd</a></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <h4>Provide your account details</h4>
+          <p>Share your registered phone number or email, and the reason for your refund request.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <h4>We review and respond</h4>
+          <p>We will confirm your eligibility and process your request within 3–5 business days.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <h4>Refund issued to original payment method</h4>
+          <p>bKash/Nagad refunds: 1–3 business days. Card refunds: 5–10 business days depending on your bank.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>You do not need to provide extensive justification for refund requests within the eligible window. A simple "I'd like a refund" is enough.</p>
+  </div>
+
+  <!-- Section 8 -->
+  <div class="legal-section" id="s8">
+    <div class="section-num">8</div>
+    <h2>Processing & Timeline</h2>
+    <p><strong>Review Time:</strong> We aim to respond to all refund requests within 1 business day and complete the review within 3–5 business days.</p>
+    <p><strong>Payment Processing:</strong></p>
+    <ul>
+      <li><strong>bKash / Nagad / Rocket:</strong> 1–3 business days after approval</li>
+      <li><strong>Debit/Credit Card:</strong> 5–10 business days (depends on your bank's processing time)</li>
+      <li><strong>Account Credit:</strong> Applied immediately upon approval</li>
+    </ul>
+    <p><strong>Currency:</strong> Refunds are issued in BDT (Bangladeshi Taka) at the same rate paid. MenuQR is not responsible for exchange rate differences if you converted from another currency.</p>
+    <p><strong>Disputes:</strong> If you believe a charge was made in error or you were charged after cancellation, contact us immediately. We take billing disputes seriously and resolve them promptly. Please contact us before initiating a chargeback through your bank — chargebacks result in fees for both parties and we prefer to resolve issues directly.</p>
+
+    <div class="highlight-box">
+      <p>📞 Questions? We're a real team based in Chittagong and we respond fast. WhatsApp us at <a href="https://wa.me/8801700000000" style="color:#1E5621;font-weight:700;">+880 1700-000000</a> — usually within a few hours during business hours.</p>
+    </div>
+  </div>
+
+  <div class="contact-card">
+    <h3>Need a refund or have a billing question?</h3>
+    <p>Don't go through your bank first — talk to us directly. We resolve billing issues fast.</p>
+    <a href="https://wa.me/8801700000000">💬 WhatsApp Us Now</a>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 MenuQR. All rights reserved. Chittagong, Bangladesh.</p>
+  <div class="footer-legal-links">
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms of Service</a>
+    <a href="refund-policy.html" class="active">Refund Policy</a>
+  </div>
+</footer>
+
+</body>
+</html>

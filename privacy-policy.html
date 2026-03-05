@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — MenuQR</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Jost', sans-serif; background: #FFFFFF; color: #1A1A1A; font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.97); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.08); padding: 0 48px; height: 68px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; color: #1A1A1A; text-decoration: none; }
+  .nav-logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg,#2C742F,#3A9E3F); border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+  .nav-back { display: flex; align-items: center; gap: 6px; color: #2C742F; font-size: 14px; font-weight: 600; text-decoration: none; padding: 8px 18px; border: 1.5px solid rgba(44,116,47,0.25); border-radius: 100px; transition: all 0.2s; }
+  .nav-back:hover { background: rgba(44,116,47,0.06); border-color: #2C742F; }
+  .legal-hero { background: linear-gradient(135deg, #f8fdf8, #f0f7f0); border-bottom: 1px solid rgba(44,116,47,0.12); padding: 64px 48px 56px; text-align: center; }
+  .legal-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(44,116,47,0.08); border: 1px solid rgba(44,116,47,0.2); color: #2C742F; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; }
+  .legal-hero h1 { font-size: clamp(30px,4vw,48px); font-weight: 800; color: #1A1A1A; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 14px; }
+  .legal-hero p { color: #6B7280; font-size: 15px; max-width: 520px; margin: 0 auto; }
+  .legal-meta { display: flex; align-items: center; justify-content: center; gap: 24px; margin-top: 24px; flex-wrap: wrap; }
+  .legal-meta span { font-size: 13px; color: #9CA3AF; display: flex; align-items: center; gap: 6px; }
+  .legal-meta span strong { color: #4A4A4A; }
+  .legal-wrap { max-width: 820px; margin: 0 auto; padding: 64px 24px 100px; }
+  .toc { background: #F8F8F8; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 28px 32px; margin-bottom: 56px; }
+  .toc h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #9CA3AF; margin-bottom: 16px; }
+  .toc ol { padding-left: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .toc ol li { font-size: 14px; }
+  .toc ol li a { color: #2C742F; text-decoration: none; font-weight: 500; }
+  .toc ol li a:hover { text-decoration: underline; }
+  .legal-section { margin-bottom: 52px; padding-bottom: 52px; border-bottom: 1px solid rgba(0,0,0,0.07); }
+  .legal-section:last-of-type { border-bottom: none; }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg,#2C742F,#3A9E3F); color: #fff; font-size: 13px; font-weight: 700; border-radius: 8px; margin-bottom: 12px; }
+  .legal-section h2 { font-size: 22px; font-weight: 700; color: #1A1A1A; margin-bottom: 16px; line-height: 1.3; }
+  .legal-section p { color: #4A4A4A; font-size: 15.5px; line-height: 1.8; margin-bottom: 14px; }
+  .legal-section p:last-child { margin-bottom: 0; }
+  .legal-section ul, .legal-section ol { padding-left: 22px; margin: 12px 0 14px; }
+  .legal-section li { color: #4A4A4A; font-size: 15px; line-height: 1.8; margin-bottom: 6px; }
+  .legal-section strong { color: #1A1A1A; font-weight: 600; }
+  .legal-section a { color: #2C742F; }
+  .highlight-box { background: rgba(44,116,47,0.05); border: 1.5px solid rgba(44,116,47,0.18); border-radius: 12px; padding: 20px 24px; margin: 20px 0; }
+  .highlight-box p { color: #2C742F; font-weight: 500; margin: 0; }
+  .contact-card { background: linear-gradient(135deg, #1E5621, #2C742F); border-radius: 20px; padding: 40px; text-align: center; margin-top: 64px; }
+  .contact-card h3 { color: #fff; font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .contact-card p { color: rgba(255,255,255,0.75); font-size: 15px; margin-bottom: 24px; }
+  .contact-card a { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: #2C742F; font-weight: 700; font-size: 15px; padding: 12px 28px; border-radius: 100px; text-decoration: none; transition: all 0.2s; }
+  .contact-card a:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+  footer { background: #1A1A1A; padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  footer p { color: rgba(255,255,255,0.4); font-size: 13px; }
+  .footer-legal-links { display: flex; gap: 20px; flex-wrap: wrap; }
+  .footer-legal-links a { color: rgba(255,255,255,0.45); font-size: 13px; text-decoration: none; }
+  .footer-legal-links a:hover { color: rgba(255,255,255,0.8); }
+  .footer-legal-links a.active { color: #3A9E3F; font-weight: 600; }
+  @media (max-width: 640px) { nav { padding: 0 20px; } .legal-hero { padding: 48px 20px 40px; } .toc ol { grid-template-columns: 1fr; } footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">▦</div>MenuQR
+  </a>
+  <a href="index.html" class="nav-back">← Back to Home</a>
+</nav>
+
+<div class="legal-hero">
+  <div class="legal-tag">🔒 Legal Document</div>
+  <h1>Privacy Policy</h1>
+  <p>How MenuQR collects, uses, and protects your personal information.</p>
+  <div class="legal-meta">
+    <span>📅 <strong>Effective Date:</strong> January 1, 2026</span>
+    <span>🔄 <strong>Last Updated:</strong> January 1, 2026</span>
+    <span>📍 <strong>Jurisdiction:</strong> Bangladesh</span>
+  </div>
+</div>
+
+<div class="legal-wrap">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#s1">Information We Collect</a></li>
+      <li><a href="#s2">How We Use Your Information</a></li>
+      <li><a href="#s3">Information Sharing</a></li>
+      <li><a href="#s4">Data Storage & Security</a></li>
+      <li><a href="#s5">Cookies & Tracking</a></li>
+      <li><a href="#s6">WhatsApp Integration</a></li>
+      <li><a href="#s7">Your Rights</a></li>
+      <li><a href="#s8">Children's Privacy</a></li>
+      <li><a href="#s9">Changes to This Policy</a></li>
+      <li><a href="#s10">Contact Us</a></li>
+    </ol>
+  </div>
+
+  <div class="highlight-box">
+    <p>🇧🇩 This Privacy Policy is governed by the laws of Bangladesh, including the Digital Security Act 2018 and applicable data protection regulations. MenuQR is operated from Chittagong, Bangladesh.</p>
+  </div>
+
+  <!-- Section 1 -->
+  <div class="legal-section" id="s1">
+    <div class="section-num">1</div>
+    <h2>Information We Collect</h2>
+    <p>When you use MenuQR — whether as a restaurant owner or as a customer placing an order — we collect certain information to provide and improve our service.</p>
+    <p><strong>Information from Restaurant Owners (Account Holders):</strong></p>
+    <ul>
+      <li>Name, phone number, and email address provided at registration</li>
+      <li>Restaurant name, address, and business details</li>
+      <li>Menu content including item names, descriptions, prices, and photos you upload</li>
+      <li>Payment information processed through our third-party payment partners (we do not store card details)</li>
+      <li>WhatsApp number designated for receiving kitchen orders</li>
+      <li>Login credentials (password stored in encrypted form — we cannot read it)</li>
+    </ul>
+    <p><strong>Information from Customers Placing Orders:</strong></p>
+    <ul>
+      <li>Table number associated with each order</li>
+      <li>Items ordered, quantities, and special instructions</li>
+      <li>Device type and browser used to access the menu (automatically collected)</li>
+      <li>Approximate time and date of each visit</li>
+    </ul>
+    <p><strong>Automatically Collected Technical Data:</strong></p>
+    <ul>
+      <li>IP address and general geographic location (country/city level only)</li>
+      <li>Browser type, operating system, and screen size</li>
+      <li>Pages visited, time spent, and click activity within the platform</li>
+      <li>QR code scan logs (time and table number only, no personal identification)</li>
+    </ul>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="legal-section" id="s2">
+    <div class="section-num">2</div>
+    <h2>How We Use Your Information</h2>
+    <p>We use the information we collect for specific, legitimate purposes only. We do not sell your data to advertisers or third parties.</p>
+    <ul>
+      <li><strong>To provide the service:</strong> Process orders, send WhatsApp notifications to the kitchen, and display menus to customers</li>
+      <li><strong>To manage your account:</strong> Authentication, billing, and account settings</li>
+      <li><strong>To improve MenuQR:</strong> Understand how the platform is used, fix bugs, and develop new features</li>
+      <li><strong>To send service communications:</strong> Important updates about your account, system maintenance, and security alerts</li>
+      <li><strong>To provide customer support:</strong> Respond to your questions, troubleshoot issues, and process refund requests</li>
+      <li><strong>To generate analytics:</strong> Provide restaurant owners with aggregated order data, peak hours, and bestseller reports</li>
+      <li><strong>Legal compliance:</strong> Meet our obligations under Bangladesh law and respond to lawful government requests</li>
+    </ul>
+    <p>We will never use your information for purposes beyond what is described here without your explicit consent.</p>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="legal-section" id="s3">
+    <div class="section-num">3</div>
+    <h2>Information Sharing</h2>
+    <p>MenuQR does not sell, rent, or trade your personal information. We share data only in the following limited circumstances:</p>
+    <p><strong>With Service Providers:</strong> We work with trusted third-party companies to operate MenuQR. These include cloud hosting providers, payment processors (bKash, Nagad, card processors), WhatsApp Business API providers, and analytics tools. These providers access only the data necessary to perform their functions and are contractually bound to protect it.</p>
+    <p><strong>Between Restaurant and Customer:</strong> When a customer places an order, the order details (items, table number, special notes) are shared with the restaurant owner's WhatsApp number. No customer contact information is collected or shared.</p>
+    <p><strong>Legal Requirements:</strong> We may disclose information if required by Bangladesh law, court order, or a lawful request from a government authority. We will notify you where legally permissible.</p>
+    <p><strong>Business Transfer:</strong> In the event of a merger, acquisition, or sale of MenuQR, your information may be transferred. We will notify you before this occurs and your rights will be maintained.</p>
+    <div class="highlight-box">
+      <p>✅ We never share your data with advertisers. MenuQR is an ad-free platform and our business model is subscription-based, not data-based.</p>
+    </div>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="legal-section" id="s4">
+    <div class="section-num">4</div>
+    <h2>Data Storage & Security</h2>
+    <p>Your data is stored on secure servers. We implement industry-standard security measures to protect your information from unauthorized access, loss, or misuse.</p>
+    <ul>
+      <li>All data transmitted between your browser and MenuQR is encrypted using SSL/TLS (HTTPS)</li>
+      <li>Passwords are hashed using bcrypt — not even our team can read your password</li>
+      <li>Database access is restricted to authorized personnel only</li>
+      <li>Regular security audits and backups are performed</li>
+      <li>Payment card data is never stored on MenuQR servers — it is handled entirely by our PCI-DSS compliant payment partners</li>
+    </ul>
+    <p><strong>Data Retention:</strong> We retain your account data for as long as your account is active. Order history is retained for 2 years to support analytics and dispute resolution. If you close your account, your personal data will be deleted within 30 days, except where retention is required by law.</p>
+  </div>
+
+  <!-- Section 5 -->
+  <div class="legal-section" id="s5">
+    <div class="section-num">5</div>
+    <h2>Cookies & Tracking</h2>
+    <p>MenuQR uses cookies and similar technologies to keep you logged in, remember your preferences, and improve performance. We use the following types:</p>
+    <ul>
+      <li><strong>Essential cookies:</strong> Required for the platform to function (login sessions, language preference, cart state). Cannot be disabled.</li>
+      <li><strong>Analytics cookies:</strong> Help us understand how the platform is used (page views, feature usage). You may opt out.</li>
+      <li><strong>No advertising cookies:</strong> We do not use cookies for ad tracking or retargeting. Ever.</li>
+    </ul>
+    <p>You can control cookies through your browser settings. Disabling essential cookies may affect your ability to use MenuQR.</p>
+  </div>
+
+  <!-- Section 6 -->
+  <div class="legal-section" id="s6">
+    <div class="section-num">6</div>
+    <h2>WhatsApp Integration</h2>
+    <p>MenuQR uses WhatsApp to deliver order notifications to your kitchen. This is central to how the service works. Please note:</p>
+    <ul>
+      <li>When you provide your WhatsApp number, it is used solely to receive automated order messages from MenuQR</li>
+      <li>WhatsApp messages are delivered via Meta's WhatsApp Business API. Meta's own privacy policy applies to the WhatsApp platform itself</li>
+      <li>We do not access your WhatsApp contact list, messages, or any other data beyond what is needed to send order alerts</li>
+      <li>Order messages include: table number, items ordered, quantities, special instructions, and order ID. No customer personal data is included</li>
+    </ul>
+  </div>
+
+  <!-- Section 7 -->
+  <div class="legal-section" id="s7">
+    <div class="section-num">7</div>
+    <h2>Your Rights</h2>
+    <p>As a MenuQR user, you have the following rights regarding your personal data:</p>
+    <ul>
+      <li><strong>Right to Access:</strong> Request a copy of all personal data we hold about you</li>
+      <li><strong>Right to Correction:</strong> Update or correct inaccurate information in your account settings</li>
+      <li><strong>Right to Deletion:</strong> Request deletion of your account and personal data (subject to legal retention requirements)</li>
+      <li><strong>Right to Portability:</strong> Request your data in a machine-readable format (CSV/JSON)</li>
+      <li><strong>Right to Object:</strong> Opt out of non-essential data processing such as analytics</li>
+      <li><strong>Right to Withdraw Consent:</strong> Where we rely on your consent to process data, you may withdraw it at any time</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:hello@menuqr.com.bd">hello@menuqr.com.bd</a>. We will respond within 14 business days.</p>
+  </div>
+
+  <!-- Section 8 -->
+  <div class="legal-section" id="s8">
+    <div class="section-num">8</div>
+    <h2>Children's Privacy</h2>
+    <p>MenuQR is a business platform intended for use by adults (18 years and older) operating restaurants. We do not knowingly collect personal information from children under the age of 18.</p>
+    <p>If we become aware that a child under 18 has provided us with personal information, we will delete it immediately. If you believe a minor has submitted information to MenuQR, please contact us at <a href="mailto:hello@menuqr.com.bd">hello@menuqr.com.bd</a>.</p>
+  </div>
+
+  <!-- Section 9 -->
+  <div class="legal-section" id="s9">
+    <div class="section-num">9</div>
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time to reflect changes in our practices, technology, or legal requirements. When we make significant changes, we will:</p>
+    <ul>
+      <li>Update the "Last Updated" date at the top of this page</li>
+      <li>Send a notification to your registered email or WhatsApp number</li>
+      <li>Display a prominent notice on the MenuQR dashboard</li>
+    </ul>
+    <p>Your continued use of MenuQR after changes are posted constitutes your acceptance of the updated policy. If you do not agree with the changes, you may close your account.</p>
+  </div>
+
+  <!-- Section 10 -->
+  <div class="legal-section" id="s10">
+    <div class="section-num">10</div>
+    <h2>Contact Us</h2>
+    <p>If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please reach out to us:</p>
+    <ul>
+      <li><strong>Email:</strong> <a href="mailto:hello@menuqr.com.bd">hello@menuqr.com.bd</a></li>
+      <li><strong>WhatsApp:</strong> <a href="https://wa.me/8801700000000">+880 1700-000000</a></li>
+      <li><strong>Address:</strong> MenuQR, Chittagong, Bangladesh</li>
+      <li><strong>Response Time:</strong> Within 14 business days</li>
+    </ul>
+  </div>
+
+  <!-- Contact CTA -->
+  <div class="contact-card">
+    <h3>Questions about your privacy?</h3>
+    <p>We're a small team based in Chittagong. We take privacy seriously and are happy to answer any questions directly.</p>
+    <a href="https://wa.me/8801700000000">💬 Chat with us on WhatsApp</a>
+  </div>
+
+</div><!-- end legal-wrap -->
+
+<footer>
+  <p>© 2026 MenuQR. All rights reserved. Chittagong, Bangladesh.</p>
+  <div class="footer-legal-links">
+    <a href="privacy-policy.html" class="active">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms of Service</a>
+    <a href="refund-policy.html">Refund Policy</a>
+  </div>
+</footer>
+
+</body>
+</html>
