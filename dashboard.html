@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MenuQR — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#2C742F;--green2:#1A3D1C;--green3:#3A9E3F;
+  --grad:linear-gradient(135deg,#2C742F,#3A9E3F);
+  --bg:#EFF1ED;--white:#fff;--sidebar:#0D1A0E;
+  --text:#0A0A0A;--text2:#374151;--muted:#6B7280;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.15);
+  --error:#DC2626;--warning:#D97706;--success:#16A34A;
+  --shadow:0 2px 14px rgba(0,0,0,0.07);
+  --shadow-md:0 4px 24px rgba(0,0,0,0.1);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.14);
+  --radius:16px;--pill:100px;
+}
+html,body{height:100%;font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:250px;min-width:250px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:100;transition:width .3s}
+.sidebar-header{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.sidebar-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.sidebar-logo-icon{width:38px;height:38px;background:var(--grad);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0}
+.sidebar-logo-text{font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.03em}
+.restaurant-pill{margin:12px 16px 0;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .2s}
+.restaurant-pill:hover{background:rgba(255,255,255,0.12)}
+.rest-avatar{width:32px;height:32px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0}
+.rest-name{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.rest-plan{font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px}
+.online-toggle{margin:10px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between}
+.online-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.8)}
+.toggle-sw{width:44px;height:24px;border-radius:12px;background:#374151;border:none;cursor:pointer;position:relative;transition:background .25s}
+.toggle-sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.toggle-sw.on{background:var(--green)}
+.toggle-sw.on::after{transform:translateX(20px)}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:none}
+.sidebar-nav::-webkit-scrollbar{display:none}
+.nav-section-label{font-size:10px;font-weight:800;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:.1em;padding:12px 8px 6px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;cursor:pointer;transition:all .18s;margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,0.07)}
+.nav-item.active{background:var(--grad);box-shadow:0 4px 14px rgba(44,116,47,0.4)}
+.nav-icon{font-size:18px;width:22px;text-align:center;flex-shrink:0}
+.nav-label{font-size:15px;font-weight:600;color:rgba(255,255,255,0.65);flex:1}
+.nav-item.active .nav-label{color:#fff;font-weight:700}
+.nav-badge{background:#DC2626;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px}
+.sidebar-footer{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.06)}
+.sidebar-user{display:flex;align-items:center;gap:10px}
+.user-av{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:700;color:#fff}
+.user-email{font-size:11px;color:rgba(255,255,255,0.38);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px}
+.logout-btn{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:18px;padding:4px;margin-left:auto;transition:color .2s}
+.logout-btn:hover{color:#fff}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:0 28px;height:64px;background:linear-gradient(135deg,#1A3D1C,#2C742F);border-bottom:none;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 14px rgba(0,0,0,0.15)}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.page-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.02em}
+.page-sub{font-size:13px;color:rgba(255,255,255,0.7);font-weight:500;margin-top:1px}
+.topbar-btn{padding:9px 20px;border-radius:var(--pill);font-size:14px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff;transition:all .18s}
+.topbar-btn:hover{background:rgba(255,255,255,0.22);border-color:rgba(255,255,255,0.5);color:#fff}
+.topbar-btn.primary{background:#fff;color:var(--green);border:none;box-shadow:0 3px 12px rgba(0,0,0,0.15);font-weight:800}
+.topbar-btn.primary:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(0,0,0,0.2);color:var(--green)}
+.mobile-menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#fff}
+.live-dot{width:8px;height:8px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite}
+.content{flex:1;overflow-y:auto;padding:24px 28px}
+.view{display:none}.view.active{display:block}
+
+/* OVERVIEW */
+.revenue-bar{background:linear-gradient(135deg,#1a0000,#2d0404);border-radius:var(--radius);padding:20px 28px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-around;gap:12px;flex-wrap:wrap}
+.rev-item{text-align:center}
+.rev-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.5);margin-bottom:6px}
+.rev-value{font-size:30px;font-weight:900;color:#FF4444;letter-spacing:-0.03em;animation:countUp .8s ease;text-shadow:0 0 20px rgba(255,68,68,0.4)}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rev-divider{width:1px;height:40px;background:rgba(255,255,255,0.1)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.stat-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:22px;box-shadow:var(--shadow);cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--grad);transform:scaleX(0);transition:transform .3s;transform-origin:left}
+.stat-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+.stat-card:hover::after{transform:scaleX(1)}
+.stat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.stat-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.stat-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.stat-value{font-size:36px;font-weight:900;color:var(--text);letter-spacing:-0.03em;line-height:1}
+.stat-value.red{color:#DC2626}
+.stat-change{font-size:13px;font-weight:700;margin-top:10px;color:var(--muted)}
+.stat-change.hot{color:#DC2626;font-weight:800;animation:blink 1.8s ease infinite}
+.stat-change.up{color:var(--success)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
+.charts-row{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;margin-bottom:22px}
+.chart-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:22px;box-shadow:var(--shadow)}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:17px;font-weight:900;color:var(--text);letter-spacing:-0.01em}
+.section-link{font-size:13px;font-weight:700;color:var(--green);cursor:pointer;text-decoration:none}
+.section-link:hover{text-decoration:underline}
+.bar-chart-wrap{display:flex;align-items:flex-end;gap:6px;height:110px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{width:100%;border-radius:6px 6px 0 0;background:rgba(44,116,47,0.14);cursor:pointer;min-height:6px;transition:all .4s ease;position:relative}
+.bar:hover{background:rgba(44,116,47,0.35)!important;transform:scaleY(1.04);transform-origin:bottom}
+.bar.today{background:var(--grad)!important;box-shadow:0 4px 14px rgba(44,116,47,0.35)}
+.bar-label{font-size:11px;font-weight:700;color:var(--muted)}
+.bar-label.today-lbl{color:var(--green);font-weight:800}
+.bar-tooltip{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:#0D1A0E;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none}
+.bar:hover .bar-tooltip{opacity:1}
+.top-items-list{display:flex;flex-direction:column;gap:9px}
+.top-item-row{display:flex;align-items:center;gap:12px;padding:10px 13px;background:var(--bg);border-radius:11px;transition:all .2s;cursor:default}
+.top-item-row:hover{background:#dce8dc;transform:translateX(4px)}
+.top-item-rank{font-size:20px;width:26px;text-align:center}
+.top-item-name{flex:1;font-size:15px;font-weight:700;color:var(--text)}
+.top-item-count{font-size:13px;font-weight:900;color:#DC2626;background:rgba(220,38,38,0.1);padding:3px 11px;border-radius:20px}
+.order-table-wrap{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.order-table{width:100%;border-collapse:collapse}
+.order-table th{padding:13px 18px;background:#f5f7f5;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;text-align:left;border-bottom:1px solid var(--border)}
+.order-table td{padding:15px 18px;font-size:15px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);transition:background .15s}
+.order-table tr:hover td{background:#f5f7f5}
+.order-table tr:last-child td{border-bottom:none}
+
+/* ORDERS */
+.orders-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border2);border-radius:var(--pill);padding:11px 18px;flex:1;min-width:200px;transition:border-color .2s}
+.search-box:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(44,116,47,0.1)}
+.search-box input{border:none;outline:none;font-size:15px;font-weight:600;color:var(--text);font-family:'Jost',sans-serif;flex:1;background:transparent}
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.filter-tab{padding:9px 18px;border-radius:var(--pill);font-size:14px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);transition:all .18s}
+.filter-tab:hover{border-color:var(--green);color:var(--green)}
+.filter-tab.active{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(44,116,47,0.25)}
+.refresh-btn{display:flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--pill);background:var(--white);border:1.5px solid var(--border2);font-size:15px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;color:var(--text);transition:all .2s;flex-shrink:0}
+.refresh-btn:hover{border-color:var(--green);color:var(--green)}
+.refresh-icon{display:inline-block;font-size:16px;transition:transform .6s}
+.refresh-btn:hover .refresh-icon{transform:rotate(360deg)}
+.orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.order-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);transition:all .22s;border-left:5px solid var(--border2)}
+.order-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.order-card.new-order{border-left-color:#DC2626}
+.order-card.preparing{border-left-color:#D97706}
+.order-card.ready{border-left-color:#16A34A}
+.order-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.order-num{font-size:24px;font-weight:900;color:var(--text);letter-spacing:-0.02em}
+.order-num.is-new{color:#DC2626;animation:blink 1.2s ease infinite}
+.order-time-badge{font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);padding:5px 12px;border-radius:20px}
+.order-table-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.order-table-label{font-size:18px;font-weight:800;color:var(--text)}
+.order-items-block{font-size:14px;font-weight:600;color:var(--text2);line-height:1.8;padding:12px 14px;background:var(--bg);border-radius:10px;margin-bottom:12px}
+.order-note{font-size:13px;font-weight:600;color:var(--warning);margin-bottom:12px;display:flex;align-items:flex-start;gap:6px}
+.order-card-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
+.order-total{font-size:24px;font-weight:900;color:var(--green);letter-spacing:-0.02em}
+.order-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.oabtn{padding:8px 15px;border-radius:var(--pill);font-size:13px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);transition:all .15s}
+.oabtn:hover{border-color:var(--green);color:var(--green)}
+.oabtn.confirm{background:var(--grad);color:#fff;border:none;box-shadow:0 2px 8px rgba(44,116,47,0.25)}
+.oabtn.danger{color:var(--error)}
+.oabtn.danger:hover{border-color:var(--error);background:rgba(220,38,38,0.06);color:var(--error)}
+.oabtn.wa{background:#25D366;color:#fff;border:none;font-size:16px;padding:8px 12px}
+.oabtn.wa:hover{background:#20c05c}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:800}
+.badge-new{background:rgba(220,38,38,0.12);color:#DC2626}
+.badge-confirmed,.badge-preparing{background:rgba(37,99,235,0.1);color:#1D4ED8}
+.badge-ready{background:rgba(22,163,74,0.12);color:#15803D}
+.badge-served{background:rgba(107,114,128,0.1);color:#374151}
+.badge-cancelled{background:rgba(220,38,38,0.06);color:#9CA3AF;text-decoration:line-through}
+
+/* MENU */
+.menu-layout{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 140px);background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.categories-panel{background:#0D1A0E;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column}
+.categories-panel::-webkit-scrollbar{display:none}
+.cat-panel-header{padding:18px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cat-panel-title{font-size:12px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.1em}
+.cat-add-btn{width:28px;height:28px;border-radius:8px;background:var(--grad);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .18s}
+.cat-add-btn:hover{transform:scale(1.12)}
+.quick-cats{padding:10px 12px 4px}
+.quick-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.quick-grid{display:flex;flex-wrap:wrap;gap:5px}
+.quick-btn{font-size:11px;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.07);border:none;color:rgba(255,255,255,0.55);cursor:pointer;font-family:'Jost',sans-serif;transition:background .15s;white-space:nowrap}
+.quick-btn:hover{background:rgba(255,255,255,0.14);color:#fff}
+.cats-list{padding:6px 10px 16px;flex:1}
+.cat-item{display:flex;align-items:center;gap:10px;padding:11px 11px;border-radius:10px;cursor:pointer;transition:all .18s;margin-bottom:3px}
+.cat-item:hover{background:rgba(255,255,255,0.07)}
+.cat-item.active{background:var(--grad);box-shadow:0 3px 12px rgba(44,116,47,0.35)}
+.cat-emoji{font-size:18px;flex-shrink:0;width:22px;text-align:center}
+.cat-name{font-size:14px;font-weight:600;flex:1;color:rgba(255,255,255,0.7)}
+.cat-item.active .cat-name{color:#fff;font-weight:700}
+.cat-count{font-size:11px;font-weight:800;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);padding:2px 8px;border-radius:20px}
+.cat-item.active .cat-count{background:rgba(255,255,255,0.2);color:#fff}
+.items-panel{display:flex;flex-direction:column;overflow:hidden}
+.items-panel-header{padding:17px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.items-grid{flex:1;overflow-y:auto;padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;align-content:start}
+.item-card{background:var(--bg);border-radius:14px;border:1.5px solid var(--border);overflow:hidden;transition:all .22s;cursor:pointer;position:relative}
+.item-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);border-color:var(--green)}
+.item-card.unavailable{opacity:.5}
+.item-photo{height:90px;display:flex;align-items:center;justify-content:center;font-size:44px;background:linear-gradient(135deg,rgba(44,116,47,0.06),rgba(58,158,63,0.03));position:relative;overflow:hidden}
+.item-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.item-sold-out{position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;letter-spacing:.08em}
+.item-body{padding:12px}
+.item-name{font-size:14px;font-weight:800;color:var(--text);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-desc-prev{font-size:12px;color:var(--muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-price{font-size:19px;font-weight:900;color:var(--green)}
+.item-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.item-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.item-badge.best{background:rgba(245,158,11,0.12);color:#D97706}
+.item-badge.spicy{background:rgba(220,38,38,0.1);color:#DC2626}
+.item-badge.veg{background:rgba(22,163,74,0.1);color:#15803D}
+.item-badge.new2{background:rgba(37,99,235,0.1);color:#1D4ED8}
+.item-actions{position:absolute;top:7px;right:7px;display:flex;gap:5px;opacity:0;transition:opacity .2s}
+.item-card:hover .item-actions{opacity:1}
+.item-action{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .15s;backdrop-filter:blur(4px)}
+.item-action:hover{background:#fff;transform:scale(1.1)}
+.item-action.del:hover{background:rgba(220,38,38,0.1)}
+
+/* QR */
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.qr-card{background:var(--white);border-radius:var(--radius);border:1.5px solid var(--border);padding:24px;text-align:center;box-shadow:var(--shadow);transition:all .22s}
+.qr-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);border-color:rgba(44,116,47,0.25)}
+.qr-canvas{border-radius:10px;display:block;margin:0 auto 16px}
+.qr-table-name{font-size:22px;font-weight:900;color:var(--text);margin-bottom:5px}
+.qr-table-label{font-size:14px;font-weight:600;color:var(--muted);margin-bottom:7px}
+.qr-url{font-size:11px;color:var(--green);font-family:monospace;margin-bottom:16px;word-break:break-all;line-height:1.6;font-weight:600}
+.qr-actions{display:flex;gap:8px}
+.qr-btn{flex:1;padding:11px;border-radius:var(--pill);font-size:14px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);transition:all .18s}
+.qr-btn.dl{background:var(--grad);color:#fff;border:none;box-shadow:0 2px 8px rgba(44,116,47,0.25)}
+.qr-btn.dl:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(44,116,47,0.35)}
+.qr-btn.cp:hover{border-color:var(--green);color:var(--green)}
+
+/* SETTINGS */
+.settings-wrap{max-width:700px}
+.settings-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:28px 32px;box-shadow:var(--shadow);margin-bottom:18px}
+.sc-title{font-size:19px;font-weight:900;color:var(--text);margin-bottom:5px}
+.sc-sub{font-size:14px;color:var(--muted);font-weight:500;margin-bottom:22px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sf{display:flex;flex-direction:column;gap:7px}
+.sf.full{grid-column:1/-1}
+.sf label{font-size:13px;font-weight:800;color:var(--text)}
+.si{width:100%;border:1.5px solid var(--border2);border-radius:12px;padding:13px 16px;font-size:15px;font-weight:600;color:var(--text);font-family:'Jost',sans-serif;outline:none;transition:all .2s;background:var(--white)}
+.si:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(44,116,47,0.1)}
+.si::placeholder{color:var(--muted);font-weight:400}
+textarea.si{resize:none;line-height:1.6}
+.sh{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+.save-btn{padding:15px 36px;border-radius:var(--pill);background:var(--grad);border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:'Jost',sans-serif;box-shadow:0 4px 16px rgba(44,116,47,0.3);transition:all .2s;display:block}
+.save-btn:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(44,116,47,0.4)}
+.table-row{display:flex;gap:10px;align-items:center}
+.tables-info{font-size:13px;color:var(--muted);font-weight:600;margin-top:5px}
+.tables-info strong{color:var(--green)}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--white);border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:mIn .25s cubic-bezier(0.34,1.4,0.64,1)}
+@keyframes mIn{from{opacity:0;transform:scale(0.93) translateY(12px)}to{opacity:1;transform:none}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);z-index:1}
+.modal-title{font-size:20px;font-weight:900;color:var(--text)}
+.modal-close{width:32px;height:32px;border-radius:8px;background:var(--bg);border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.modal-close:hover{background:#e5e7eb}
+.modal-form{padding:22px 26px;display:flex;flex-direction:column;gap:16px}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mfield{display:flex;flex-direction:column;gap:7px}
+.mfield label{font-size:13px;font-weight:800;color:var(--text)}
+.minput{width:100%;border:1.5px solid var(--border2);border-radius:11px;padding:12px 14px;font-size:15px;font-weight:500;color:var(--text);font-family:'Jost',sans-serif;outline:none;transition:all .2s;background:var(--white)}
+.minput:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(44,116,47,0.1)}
+textarea.minput{resize:none;line-height:1.6}
+select.minput{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%236B7280' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.photo-area{border:2px dashed var(--border2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+.photo-area:hover{border-color:var(--green);background:rgba(44,116,47,0.03)}
+.prev-img{width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px;display:none}
+.cbgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cbitem{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:9px;background:var(--bg);cursor:pointer;transition:background .15s}
+.cbitem:hover{background:#dce8dc}
+.cbitem input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
+.cbitem label{font-size:13px;font-weight:600;color:var(--text);cursor:pointer}
+.modal-footer{padding:16px 26px 22px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border)}
+.btn-cancel{padding:11px 22px;border-radius:var(--pill);background:var(--bg);border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;color:var(--text2);transition:all .15s}
+.btn-cancel:hover{background:#e5e7eb}
+.btn-save{padding:11px 28px;border-radius:var(--pill);background:var(--grad);border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:'Jost',sans-serif;box-shadow:0 3px 12px rgba(44,116,47,0.25);transition:all .2s}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(44,116,47,0.35)}
+.btn-save:disabled{opacity:.65;cursor:not-allowed;transform:none}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+.empty-icon{font-size:52px;margin-bottom:14px;opacity:.55}
+.empty-title{font-size:19px;font-weight:800;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--muted);font-weight:500;max-width:280px;line-height:1.6}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--text);color:#fff;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:600;font-family:'Jost',sans-serif;box-shadow:var(--shadow-lg);animation:slideIn .3s ease;transition:all .3s}
+.toast.success{background:#15803D}
+.toast.error{background:#DC2626}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+/* SIDEBAR OVERLAY */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99}
+@media(max-width:900px){
+  .sidebar{position:fixed;left:-250px;top:0;bottom:0;z-index:200;transition:left .3s}
+  .sidebar.open{left:0}
+  .sidebar-overlay.show{display:block}
+  .mobile-menu-btn{display:block}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row{grid-template-columns:1fr}
+  .menu-layout{grid-template-columns:1fr;height:auto}
+  .content{padding:16px}
+  .sg{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .revenue-bar{flex-wrap:wrap;gap:14px}
+  .rev-divider{display:none}
+  .qr-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<div class="app">
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <a href="index.html" class="sidebar-logo">
+      <div class="sidebar-logo-icon">▦</div>
+      <span class="sidebar-logo-text">MenuQR</span>
+    </a>
+  </div>
+  <div class="restaurant-pill" onclick="navTo('settings')">
+    <div class="rest-avatar" id="rest-avatar">R</div>
+    <div style="flex:1;min-width:0">
+      <div class="rest-name" id="rest-name">My Restaurant</div>
+      <div class="rest-plan" id="rest-plan">Free Trial · 14 days left</div>
+    </div>
+  </div>
+  <div class="online-toggle">
+    <span class="online-label" id="online-label">Restaurant Open</span>
+    <button class="toggle-sw on" id="online-toggle" onclick="toggleOnline()"></button>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item active" onclick="navTo('overview')" id="nav-overview"><div class="nav-icon">📊</div><span class="nav-label">Overview</span></div>
+    <div class="nav-item" onclick="navTo('orders')" id="nav-orders"><div class="nav-icon">🛎️</div><span class="nav-label">Orders</span><span class="nav-badge" id="new-orders-badge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="navTo('menu')" id="nav-menu"><div class="nav-icon">🍽️</div><span class="nav-label">Menu Manager</span></div>
+    <div class="nav-item" onclick="navTo('qr')" id="nav-qr"><div class="nav-icon">📱</div><span class="nav-label">QR Codes</span></div>
+    <div class="nav-section-label">Account</div>
+    <div class="nav-item" onclick="navTo('settings')" id="nav-settings"><div class="nav-icon">⚙️</div><span class="nav-label">Settings</span></div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-av" id="user-av">U</div>
+      <div style="flex:1;min-width:0">
+        <div class="user-name" id="user-name">Loading...</div>
+        <div class="user-email" id="user-email">...</div>
+      </div>
+      <button class="logout-btn" onclick="handleLogout()" title="Logout">⏻</button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
+      <div>
+        <div class="page-title" id="page-title">Overview</div>
+        <div class="page-sub" id="page-sub">Welcome back 👋</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,0.85);font-weight:700">
+        <div class="live-dot"></div>Live
+      </div>
+      <button class="topbar-btn primary" onclick="navTo('menu');setTimeout(()=>openAddItemModal(),300)">+ Add Item</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="view active" id="view-overview">
+      <div class="revenue-bar">
+        <div class="rev-item"><div class="rev-label">🔴 Today's Revenue</div><div class="rev-value" id="rev-today">৳0</div></div>
+        <div class="rev-divider"></div>
+        <div class="rev-item"><div class="rev-label">🔴 Orders Today</div><div class="rev-value" id="rev-orders">0</div></div>
+        <div class="rev-divider"></div>
+        <div class="rev-item"><div class="rev-label">🔴 Avg Order Value</div><div class="rev-value" id="rev-avg">৳0</div></div>
+        <div class="rev-divider"></div>
+        <div class="rev-item"><div class="rev-label">🔴 Pending Now</div><div class="rev-value" id="rev-pending">0</div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card" onclick="navTo('orders')">
+          <div class="stat-header"><span class="stat-label">Today's Orders</span><div class="stat-icon" style="background:rgba(220,38,38,0.1)">🛎️</div></div>
+          <div class="stat-value red" id="stat-orders">—</div>
+          <div class="stat-change hot" id="stat-orders-change">Loading...</div>
+        </div>
+        <div class="stat-card" onclick="navTo('orders')">
+          <div class="stat-header"><span class="stat-label">Today's Revenue</span><div class="stat-icon" style="background:rgba(44,116,47,0.1)">💰</div></div>
+          <div class="stat-value red" id="stat-revenue">—</div>
+          <div class="stat-change hot" id="stat-revenue-change">Loading...</div>
+        </div>
+        <div class="stat-card" onclick="navTo('menu')">
+          <div class="stat-header"><span class="stat-label">Menu Items</span><div class="stat-icon" style="background:rgba(37,99,235,0.1)">🍽️</div></div>
+          <div class="stat-value" id="stat-items">—</div>
+          <div class="stat-change up" id="stat-items-change">Loading...</div>
+        </div>
+        <div class="stat-card" onclick="navTo('qr')">
+          <div class="stat-header"><span class="stat-label">Active Tables</span><div class="stat-icon" style="background:rgba(217,119,6,0.1)">🪑</div></div>
+          <div class="stat-value" id="stat-tables">—</div>
+          <div class="stat-change up" id="stat-tables-change">Loading...</div>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="section-header">
+            <span class="section-title">📊 Orders This Week</span>
+            <span style="font-size:12px;color:var(--muted);font-weight:600">Last 7 days</span>
+          </div>
+          <div class="bar-chart-wrap" id="week-bars"></div>
+        </div>
+        <div class="chart-card">
+          <div class="section-header"><span class="section-title">🔥 Best Sellers Today</span></div>
+          <div class="top-items-list" id="top-items-list">
+            <div style="color:var(--muted);font-size:14px;font-weight:500;text-align:center;padding:20px 0">No orders yet today</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-header" style="margin-bottom:14px">
+        <span class="section-title">🕐 Recent Orders</span>
+        <a class="section-link" onclick="navTo('orders')">View all →</a>
+      </div>
+      <div class="order-table-wrap">
+        <table class="order-table">
+          <thead><tr><th>Order #</th><th>Table</th><th>Items</th><th>Total</th><th>Status</th><th>Time</th></tr></thead>
+          <tbody id="recent-orders-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:36px;font-size:15px">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="view" id="view-orders">
+      <div class="orders-toolbar">
+        <div class="search-box">
+          <span style="color:var(--muted);font-size:18px">🔍</span>
+          <input type="text" placeholder="Search by order # or table..." id="orders-search" oninput="renderOrders()">
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterOrderStatus('all',this)">All</button>
+          <button class="filter-tab" onclick="filterOrderStatus('new',this)">🔴 New</button>
+          <button class="filter-tab" onclick="filterOrderStatus('preparing',this)">🔵 Cooking</button>
+          <button class="filter-tab" onclick="filterOrderStatus('ready',this)">🟢 Ready</button>
+          <button class="filter-tab" onclick="filterOrderStatus('served',this)">✅ Served</button>
+        </div>
+        <button class="refresh-btn" onclick="doRefresh()">
+          <span class="refresh-icon" id="refresh-icon">🔄</span>
+          <span>Refresh</span>
+        </button>
+      </div>
+      <div class="orders-grid" id="orders-grid">
+        <div class="empty-state"><div class="empty-icon">🛎️</div><div class="empty-title">No orders yet</div><div class="empty-sub">Orders appear when customers scan QR codes at tables</div></div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="view" id="view-menu">
+      <div class="menu-layout">
+        <div class="categories-panel">
+          <div class="cat-panel-header">
+            <span class="cat-panel-title">Categories</span>
+            <button class="cat-add-btn" onclick="openAddCategoryModal()">+</button>
+          </div>
+          <div class="quick-cats">
+            <div class="quick-label">Quick Add</div>
+            <div class="quick-grid" id="quick-cat-grid"></div>
+          </div>
+          <div class="cats-list" id="categories-list">
+            <div class="cat-item active" onclick="selectCategory('all',this)">
+              <span class="cat-emoji">🍽️</span>
+              <span class="cat-name">All Items</span>
+              <span class="cat-count" id="all-count">0</span>
+            </div>
+          </div>
+        </div>
+        <div class="items-panel">
+          <div class="items-panel-header">
+            <span class="section-title" id="items-panel-title">All Items</span>
+            <button class="topbar-btn primary" onclick="openAddItemModal()">+ Add Item</button>
+          </div>
+          <div class="items-grid" id="items-grid">
+            <div class="empty-state"><div class="empty-icon">🍽️</div><div class="empty-title">No items yet</div><div class="empty-sub">Click "+ Add Item" to build your menu</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR CODES -->
+    <div class="view" id="view-qr">
+      <div class="section-header" style="margin-bottom:22px">
+        <div>
+          <div class="page-title" style="font-size:26px;font-weight:900">QR Codes</div>
+          <div style="font-size:15px;color:var(--muted);font-weight:500;margin-top:4px">Each table has its own unique scannable QR code</div>
+        </div>
+        <button class="topbar-btn primary" onclick="openAddTableModal()">+ Add Table</button>
+      </div>
+      <div class="qr-grid" id="qr-grid">
+        <div class="empty-state"><div class="empty-icon">📱</div><div class="empty-title">No tables yet</div><div class="empty-sub">Add tables to generate QR codes for customers</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="view-settings">
+      <div class="settings-wrap">
+        <div class="settings-card">
+          <div class="sc-title">🏪 Restaurant Information</div>
+          <div class="sc-sub">Details shown to customers on your menu page</div>
+          <div class="sg">
+            <div class="sf"><label>🏪 Restaurant Name *</label><input class="si" id="set-name" placeholder="e.g. Bismillah Hotel"></div>
+            <div class="sf"><label>🌟 Speciality</label><input class="si" id="set-specialty" placeholder="e.g. Authentic Biryani & BBQ"></div>
+            <div class="sf full"><label>📍 Address</label><input class="si" id="set-address" placeholder="e.g. 12 Main Road, Agrabad, Chittagong"></div>
+            <div class="sf full"><label>📝 Description</label><textarea class="si" id="set-desc" rows="3" placeholder="Tell customers about your restaurant — food style, story, what makes you special..."></textarea></div>
+          </div>
+        </div>
+        <div class="settings-card">
+          <div class="sc-title">👤 Owner Details</div>
+          <div class="sc-sub">Your personal and contact information</div>
+          <div class="sg">
+            <div class="sf"><label>👤 Owner Name</label><input class="si" id="set-owner-name" placeholder="Your full name"></div>
+            <div class="sf"><label>📱 Owner Phone</label><input class="si" id="set-owner-phone" placeholder="01XXXXXXXXX" type="tel"></div>
+            <div class="sf"><label>💬 Kitchen WhatsApp</label><input class="si" id="set-whatsapp" placeholder="01XXXXXXXXX" type="tel"><div class="sh">Orders will be sent here via WhatsApp</div></div>
+            <div class="sf"><label>🏙️ City</label><input class="si" id="set-city" placeholder="Dhaka, Chittagong..."></div>
+          </div>
+        </div>
+        <div class="settings-card">
+          <div class="sc-title">🪑 Table Management</div>
+          <div class="sc-sub">Add more tables to generate additional QR codes</div>
+          <div class="sf">
+            <label>Add More Tables</label>
+            <div class="table-row">
+              <input class="si" id="set-new-tables" type="number" placeholder="How many to add? e.g. 5" min="1" max="200" style="flex:1">
+              <button onclick="addMoreTables()" style="padding:13px 22px;background:var(--grad);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:'Jost',sans-serif;white-space:nowrap;box-shadow:0 3px 10px rgba(44,116,47,0.25)">+ Add Tables</button>
+            </div>
+            <div class="tables-info">Currently <strong id="current-table-count">—</strong> tables active · Visit QR Codes tab to download</div>
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveSettings()">💾 Save All Changes</button>
+        <div class="settings-card" style="margin-top:18px">
+          <div class="sc-title" style="color:var(--error)">⚠️ Danger Zone</div>
+          <div style="background:rgba(220,38,38,0.04);border:1.5px solid rgba(220,38,38,0.15);border-radius:12px;padding:18px 20px">
+            <p style="font-size:14px;color:var(--text2);font-weight:500;margin-bottom:14px">Sign out of your account on this device.</p>
+            <button onclick="handleLogout()" style="padding:11px 28px;border-radius:var(--pill);background:none;border:2px solid var(--error);color:var(--error);font-size:15px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;transition:all .2s" onmouseover="this.style.background='rgba(220,38,38,0.08)'" onmouseout="this.style.background='none'">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="modal-overlay" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="item-modal-title">Add Menu Item</span>
+      <button class="modal-close" onclick="closeModal('item-modal')">✕</button>
+    </div>
+    <div class="modal-form">
+      <input type="hidden" id="item-edit-id">
+      <div class="mfield">
+        <label>📷 Item Photo</label>
+        <div class="photo-area" id="photo-upload-wrap" onclick="document.getElementById('item-photo-file').click()">
+          <img id="photo-preview" class="prev-img" src="" alt="">
+          <div id="photo-placeholder"><div style="font-size:36px;margin-bottom:8px">📷</div><div style="font-size:14px;font-weight:700;color:var(--text2)">Click to upload photo</div><div style="font-size:12px;color:var(--muted);margin-top:3px">JPG or PNG · max 2MB</div></div>
+          <input type="file" id="item-photo-file" accept="image/*" style="display:none" onchange="handlePhotoSelect(this)">
+        </div>
+        <button type="button" id="remove-photo-btn" style="display:none;margin-top:6px;font-size:13px;color:var(--error);background:none;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-weight:700;text-align:left" onclick="removePhoto()">✕ Remove photo</button>
+      </div>
+      <div class="mfield"><label>🍽️ Item Name *</label><input class="minput" id="item-name" placeholder="e.g. Chicken Biryani"></div>
+      <div class="mfield"><label>📝 Short Description</label><textarea class="minput" id="item-desc" placeholder="e.g. Fragrant basmati rice with tender chicken and aromatic spices" rows="2"></textarea></div>
+      <div class="mrow">
+        <div class="mfield"><label>💰 Price (৳) *</label><input class="minput" id="item-price" type="number" placeholder="180" min="0"></div>
+        <div class="mfield"><label>📂 Category</label><select class="minput" id="item-category"><option value="">— Select Category —</option></select></div>
+      </div>
+      <div class="mrow">
+        <div class="mfield"><label>🔤 Bangla Name</label><input class="minput" id="item-name-bn" placeholder="চিকেন বিরিয়ানি"></div>
+        <div class="mfield"><label>😊 Emoji (fallback)</label><input class="minput" id="item-emoji" placeholder="🍛" maxlength="4" style="font-size:24px;text-align:center"></div>
+      </div>
+      <div class="mfield">
+        <label>🏷️ Badges</label>
+        <div class="cbgrid">
+          <div class="cbitem"><input type="checkbox" id="badge-best"><label for="badge-best">⭐ Best Seller</label></div>
+          <div class="cbitem"><input type="checkbox" id="badge-chef"><label for="badge-chef">👨‍🍳 Chef's Pick</label></div>
+          <div class="cbitem"><input type="checkbox" id="badge-spicy"><label for="badge-spicy">🌶️ Spicy</label></div>
+          <div class="cbitem"><input type="checkbox" id="badge-veg"><label for="badge-veg">🥦 Veg</label></div>
+          <div class="cbitem"><input type="checkbox" id="badge-new"><label for="badge-new">🆕 New Item</label></div>
+          <div class="cbitem"><input type="checkbox" id="item-sold-out"><label for="item-sold-out">❌ Sold Out</label></div>
+        </div>
+      </div>
+      <div class="cbitem" style="width:fit-content"><input type="checkbox" id="item-available" checked><label for="item-available">✅ Available for ordering</label></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('item-modal')">Cancel</button>
+      <button class="btn-save" id="item-save-btn" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CATEGORY MODAL -->
+<div class="modal-overlay" id="category-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><span class="modal-title">Add Category</span><button class="modal-close" onclick="closeModal('category-modal')">✕</button></div>
+    <div class="modal-form">
+      <div class="mfield"><label>Category Name *</label><input class="minput" id="cat-name" placeholder="e.g. Rice Dishes"></div>
+      <div class="mfield"><label>Bangla Name</label><input class="minput" id="cat-name-bn" placeholder="ভাতের আইটেম"></div>
+      <div class="mfield"><label>Emoji</label><input class="minput" id="cat-emoji" placeholder="🍛" maxlength="4" style="font-size:28px;text-align:center"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('category-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveCategory()">Add Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TABLE MODAL -->
+<div class="modal-overlay" id="table-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><span class="modal-title">Add Table</span><button class="modal-close" onclick="closeModal('table-modal')">✕</button></div>
+    <div class="modal-form">
+      <div class="mfield"><label>Table Number / Name *</label><input class="minput" id="table-number" placeholder="e.g. 1, A1, VIP-1, Rooftop-1"></div>
+      <div class="mfield"><label>Label (optional)</label><input class="minput" id="table-label" placeholder="e.g. Window Seat, Garden Area"></div>
+      <p style="font-size:13px;color:var(--muted);font-weight:500">A unique QR code will be generated instantly.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('table-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveTable()">🔲 Generate QR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const sb = createClient(
+  'https://jkskdvvisfmezcqvamfy.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imprc2tkdnZpc2ZtZXpjcXZhbWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2OTYzNzMsImV4cCI6MjA4ODI3MjM3M30.AxQwKmgaMdRcGyVXDPkZwnjTTqWk9nku0EvCpE37Ve4'
+);
+
+let currentUser=null,currentRestaurant=null;
+let allOrders=[],allItems=[],allCategories=[],allTables=[];
+let currentOrderFilter='all',selectedCategoryId='all',editingItemId=null;
+let selectedPhotoFile=null,uploadedPhotoUrl=null;
+
+const PRESETS=[['🍛','Rice & Biryani'],['🍗','Chicken'],['🥩','Beef'],['🐟','Fish'],['🍲','Mutton'],['🫓','Bread & Roti'],['🥤','Drinks'],['☕','Beverages'],['🍮','Desserts'],['🥟','Snacks'],['🥗','Salads'],['🍳','Breakfast'],['🌙','Iftar Special']];
+
+(async()=>{
+  // Build quick cat grid
+  const qg=document.getElementById('quick-cat-grid');
+  if(qg) qg.innerHTML=PRESETS.map(([e,n])=>`<button class="quick-btn" onclick="quickAddCat('${e}','${n}')">${e} ${n.split(' ')[0]}</button>`).join('');
+
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='auth.html';return;}
+  currentUser=session.user;
+  await loadRestaurant();
+  await Promise.all([loadOverviewStats(),loadOrders(),loadMenuData(),loadTables()]);
+  startRealtimeSubscription();
+  renderWeekBars();
+})();
+
+sb.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT')window.location.href='auth.html';});
+
+async function loadRestaurant(){
+  const{data}=await sb.from('restaurants').select('*').eq('owner_id',currentUser.id).single();
+  currentRestaurant=data;
+  const meta=currentUser.user_metadata||{};
+  const name=meta.full_name||currentUser.email.split('@')[0];
+  document.getElementById('user-name').textContent=name;
+  document.getElementById('user-email').textContent=currentUser.email;
+  document.getElementById('user-av').textContent=name[0].toUpperCase();
+  document.getElementById('page-sub').textContent=`Welcome back, ${name.split(' ')[0]} 👋`;
+  if(data){
+    document.getElementById('rest-name').textContent=data.name;
+    document.getElementById('rest-avatar').textContent=data.name[0].toUpperCase();
+    document.getElementById('rest-plan').textContent='Free Trial · 14 days left';
+    if(!data.is_open)document.getElementById('online-toggle').classList.remove('on');
+    document.getElementById('set-name').value=data.name||'';
+    document.getElementById('set-whatsapp').value=data.whatsapp||'';
+    document.getElementById('set-city').value=data.city||'';
+    document.getElementById('set-desc').value=data.description||'';
+    document.getElementById('set-specialty').value=data.specialty||'';
+    document.getElementById('set-address').value=data.address||'';
+    document.getElementById('set-owner-name').value=data.owner_name||name;
+    document.getElementById('set-owner-phone').value=data.owner_phone||meta.phone||'';
+  }
+}
+
+async function loadOverviewStats(){
+  if(!currentRestaurant)return;
+  const today=new Date().toISOString().split('T')[0];
+  const[ordersRes,itemsRes,tablesRes]=await Promise.all([
+    sb.from('orders').select('id,total,status,created_at').eq('restaurant_id',currentRestaurant.id).gte('created_at',today),
+    sb.from('menu_items').select('id').eq('restaurant_id',currentRestaurant.id),
+    sb.from('restaurant_tables').select('id').eq('restaurant_id',currentRestaurant.id),
+  ]);
+  const orders=ordersRes.data||[];
+  const revenue=orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const pending=orders.filter(o=>['new','confirmed','preparing'].includes(o.status)).length;
+  const avg=orders.length?Math.round(revenue/orders.length):0;
+  animateCount('rev-today',revenue,'৳');
+  animateCount('rev-orders',orders.length,'');
+  animateCount('rev-avg',avg,'৳');
+  animateCount('rev-pending',pending,'');
+  document.getElementById('stat-orders').textContent=orders.length;
+  document.getElementById('stat-orders-change').textContent=orders.length>0?`🔴 ${orders.length} orders today`:'No orders yet';
+  document.getElementById('stat-revenue').textContent='৳'+revenue.toLocaleString('en-BD');
+  document.getElementById('stat-revenue-change').textContent=revenue>0?`🔴 ৳${revenue.toLocaleString()} earned`:'No revenue yet';
+  document.getElementById('stat-items').textContent=(itemsRes.data||[]).length;
+  document.getElementById('stat-items-change').textContent=(itemsRes.data||[]).length+' items on menu';
+  document.getElementById('stat-tables').textContent=(tablesRes.data||[]).length;
+  document.getElementById('stat-tables-change').textContent=(tablesRes.data||[]).length+' QR codes active';
+  await loadTopItems(today);
+  const recRes=await sb.from('orders').select('*,order_items(item_name,quantity)').eq('restaurant_id',currentRestaurant.id).order('created_at',{ascending:false}).limit(6);
+  renderRecentOrders(recRes.data||[]);
+}
+
+function animateCount(id,target,prefix){
+  const el=document.getElementById(id);if(!el)return;
+  let cur=0;const step=Math.max(1,Math.floor(target/25));
+  const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=prefix+cur.toLocaleString('en-BD');if(cur>=target)clearInterval(t);},40);
+}
+
+async function loadTopItems(today){
+  const{data}=await sb.from('order_items').select('item_name,quantity,orders!inner(restaurant_id,created_at)').eq('orders.restaurant_id',currentRestaurant.id).gte('orders.created_at',today);
+  const counts={};
+  (data||[]).forEach(i=>{counts[i.item_name]=(counts[i.item_name]||0)+i.quantity;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  const el=document.getElementById('top-items-list');
+  if(!sorted.length){el.innerHTML='<div style="color:var(--muted);font-size:14px;font-weight:500;text-align:center;padding:20px 0">No orders yet today</div>';return;}
+  el.innerHTML=sorted.map(([name,count],i)=>`<div class="top-item-row"><div class="top-item-rank">${medals[i]||i+1}</div><div class="top-item-name">${name}</div><div class="top-item-count">${count} sold</div></div>`).join('');
+}
+
+function renderRecentOrders(orders){
+  const tbody=document.getElementById('recent-orders-tbody');
+  if(!orders.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:36px;font-size:15px">No orders yet — share your QR codes to get started!</td></tr>`;return;}
+  tbody.innerHTML=orders.map(o=>{
+    const items=(o.order_items||[]).map(i=>`${i.quantity}x ${i.item_name}`).join(', ');
+    const time=new Date(o.created_at).toLocaleTimeString('en-BD',{hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td><strong style="font-size:16px;font-weight:900">${o.order_number||'#—'}</strong></td>
+      <td><strong style="font-size:15px">Table ${o.table_number||'—'}</strong></td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)">${items||'—'}</td>
+      <td><strong style="color:var(--green);font-size:16px">৳${parseFloat(o.total||0).toLocaleString()}</strong></td>
+      <td>${renderBadge(o.status)}</td>
+      <td style="color:var(--muted);font-weight:600">${time}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBadge(status){
+  const map={new:'badge-new 🔴 New',confirmed:'badge-confirmed 🟡 Confirmed',preparing:'badge-preparing 🔵 Preparing',ready:'badge-ready 🟢 Ready',served:'badge-served ✅ Served',cancelled:'badge-cancelled ❌ Cancelled'};
+  const val=map[status]||('badge-served '+status);
+  const parts=val.split(' ');
+  return `<span class="badge ${parts[0]}">${parts.slice(1).join(' ')}</span>`;
+}
+
+function renderWeekBars(){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayIdx=(new Date().getDay()+6)%7;
+  const counts=days.map((_,i)=>i<=todayIdx?Math.floor(Math.random()*40)+3:0);
+  const max=Math.max(...counts,1);
+  const wrap=document.getElementById('week-bars');
+  wrap.innerHTML=counts.map((c,i)=>{
+    const isToday=i===todayIdx;
+    const pct=Math.max(6,(c/max)*100);
+    return `<div class="bar-col">
+      <div class="bar${isToday?' today':''}" style="height:0%" data-pct="${pct}">
+        <span class="bar-tooltip">${days[i]}: ${c}</span>
+      </div>
+      <div class="bar-label${isToday?' today-lbl':''}">${days[i]}</div>
+    </div>`;
+  }).join('');
+  // Animate in
+  setTimeout(()=>{
+    wrap.querySelectorAll('.bar').forEach((b,i)=>{
+      b.style.transition=`height .5s ease ${i*0.07}s`;
+      b.style.height=b.dataset.pct+'%';
+    });
+  },80);
+}
+
+async function loadOrders(){
+  if(!currentRestaurant)return;
+  const{data}=await sb.from('orders').select('*,order_items(item_name,quantity,item_price)').eq('restaurant_id',currentRestaurant.id).order('created_at',{ascending:false}).limit(60);
+  allOrders=data||[];
+  renderOrders();
+  updateNewOrdersBadge();
+}
+
+async function doRefresh(){
+  const icon=document.getElementById('refresh-icon');
+  icon.style.transition='transform .6s';
+  icon.style.transform='rotate(360deg)';
+  await loadOrders();
+  await loadOverviewStats();
+  showToast('Orders refreshed! ✓','success');
+  setTimeout(()=>{icon.style.transition='';icon.style.transform='';},700);
+}
+
+function renderOrders(){
+  const search=(document.getElementById('orders-search')?.value||'').toLowerCase();
+  const filtered=allOrders.filter(o=>{
+    const ms=currentOrderFilter==='all'||o.status===currentOrderFilter;
+    const mq=!search||(o.order_number||'').toLowerCase().includes(search)||(o.table_number||'').toLowerCase().includes(search);
+    return ms&&mq;
+  });
+  const grid=document.getElementById('orders-grid');
+  if(!filtered.length){grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🛎️</div><div class="empty-title">No orders found</div><div class="empty-sub">Try a different filter</div></div>`;return;}
+  grid.innerHTML=filtered.map(o=>{
+    const items=(o.order_items||[]).map(i=>`• ${i.quantity}x ${i.item_name}`).join('<br>');
+    const time=timeSince(o.created_at);
+    const isNew=o.status==='new';
+    const nextStatus={new:'confirmed',confirmed:'preparing',preparing:'ready',ready:'served'}[o.status];
+    const nextLabel={new:'✓ Confirm',confirmed:'🍳 Cook',preparing:'✅ Ready',ready:'🍽️ Served'}[o.status]||'';
+    return `<div class="order-card ${isNew?'new-order':o.status==='preparing'?'preparing':o.status==='ready'?'ready':''}">
+      <div class="order-card-top">
+        <div class="order-num${isNew?' is-new':''}">${o.order_number||'#—'}</div>
+        <div class="order-time-badge">⏱ ${time}</div>
+      </div>
+      <div class="order-table-row">
+        <div class="order-table-label">🪑 Table ${o.table_number||'—'}</div>
+        ${renderBadge(o.status)}
+      </div>
+      <div class="order-items-block">${items||'No items'}</div>
+      ${o.special_note?`<div class="order-note">📝 <span>${o.special_note}</span></div>`:''}
+      <div class="order-card-bottom">
+        <div class="order-total">৳${parseFloat(o.total||0).toLocaleString()}</div>
+        <div class="order-actions">
+          <button class="oabtn wa" onclick="sendOrderToWhatsApp('${o.id}')" title="WhatsApp">💬</button>
+          ${nextStatus?`<button class="oabtn confirm" onclick="updateOrderStatus('${o.id}','${nextStatus}')">${nextLabel}</button>`:''}
+          ${o.status!=='served'&&o.status!=='cancelled'?`<button class="oabtn danger" onclick="updateOrderStatus('${o.id}','cancelled')">✕ Cancel</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterOrderStatus(status,btn){
+  currentOrderFilter=status;
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+}
+
+async function sendOrderToWhatsApp(orderId){
+  const order=allOrders.find(o=>o.id===orderId);if(!order)return;
+  const itemsRes=await sb.from('order_items').select('*').eq('order_id',orderId);
+  const items=itemsRes.data||[];
+  const itemsList=items.map(i=>`  • ${i.quantity}x ${i.item_name} — ৳${(parseFloat(i.item_price)*i.quantity).toLocaleString()}`).join('\n');
+  const note=order.special_note?`\n📝 Note: ${order.special_note}`:'';
+  const msg=`🛎️ *NEW ORDER ${order.order_number||'#—'}*\n🪑 Table: ${order.table_number||'—'}\n⏰ ${new Date(order.created_at||Date.now()).toLocaleTimeString('en-BD',{hour:'2-digit',minute:'2-digit'})}\n\n*Items:*\n${itemsList}\n\n💰 *Total: ৳${parseFloat(order.total||0).toLocaleString()}*${note}\n\n_Powered by MenuQR_`;
+  let phone=(currentRestaurant?.whatsapp||'').replace(/\D/g,'');
+  if(!phone){showToast('No WhatsApp number in Settings','error');return;}
+  if(phone.startsWith('0'))phone='880'+phone.slice(1);
+  if(!phone.startsWith('880'))phone='880'+phone;
+  await sb.from('orders').update({wa_sent:true,wa_sent_at:new Date().toISOString()}).eq('id',orderId);
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+  showToast('WhatsApp opened!','success');
+}
+
+async function updateOrderStatus(orderId,newStatus){
+  await sb.from('orders').update({status:newStatus}).eq('id',orderId);
+  allOrders=allOrders.map(o=>o.id===orderId?{...o,status:newStatus}:o);
+  renderOrders();updateNewOrdersBadge();
+  showToast(`Order → ${newStatus}`,'success');
+}
+
+function updateNewOrdersBadge(){
+  const n=allOrders.filter(o=>o.status==='new').length;
+  const b=document.getElementById('new-orders-badge');
+  b.style.display=n>0?'':'none';b.textContent=n;
+}
+
+function timeSince(dateStr){
+  const diff=(Date.now()-new Date(dateStr).getTime())/1000;
+  if(diff<60)return 'Just now';
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  return Math.floor(diff/3600)+'h ago';
+}
+
+// PHOTO
+function handlePhotoSelect(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>2*1024*1024){showToast('Photo must be under 2MB','error');return;}
+  selectedPhotoFile=file;
+  const r=new FileReader();
+  r.onload=e=>{
+    const p=document.getElementById('photo-preview');
+    p.src=e.target.result;p.style.display='block';
+    document.getElementById('photo-placeholder').style.display='none';
+    document.getElementById('remove-photo-btn').style.display='block';
+    document.getElementById('photo-upload-wrap').style.cssText+=';border-color:var(--green);background:rgba(44,116,47,0.04)';
+  };
+  r.readAsDataURL(file);
+}
+
+function removePhoto(){
+  selectedPhotoFile=null;uploadedPhotoUrl=null;
+  const p=document.getElementById('photo-preview');p.src='';p.style.display='none';
+  document.getElementById('photo-placeholder').style.display='block';
+  document.getElementById('remove-photo-btn').style.display='none';
+  document.getElementById('photo-upload-wrap').style.borderColor='';
+  document.getElementById('photo-upload-wrap').style.background='';
+  document.getElementById('item-photo-file').value='';
+}
+
+async function uploadPhoto(itemId){
+  if(!selectedPhotoFile)return uploadedPhotoUrl;
+  try{
+    const ext=selectedPhotoFile.name.split('.').pop();
+    const path=`${currentRestaurant.id}/${itemId||Date.now()}.${ext}`;
+    const{error}=await sb.storage.from('food-photos').upload(path,selectedPhotoFile,{upsert:true});
+    if(error)throw error;
+    const{data}=sb.storage.from('food-photos').getPublicUrl(path);
+    return data.publicUrl;
+  }catch(e){console.warn('Photo upload:',e.message);return null;}
+}
+
+// MENU DATA
+async function loadMenuData(){
+  if(!currentRestaurant)return;
+  const[catsRes,itemsRes]=await Promise.all([
+    sb.from('categories').select('*').eq('restaurant_id',currentRestaurant.id).order('sort_order'),
+    sb.from('menu_items').select('*').eq('restaurant_id',currentRestaurant.id).order('sort_order'),
+  ]);
+  allCategories=catsRes.data||[];
+  allItems=itemsRes.data||[];
+  renderCategories();renderItems();populateCategorySelect();
+  const tc=document.getElementById('current-table-count');
+  if(tc)tc.textContent=allTables.length||'—';
+}
+
+function renderCategories(){
+  const list=document.getElementById('categories-list');
+  const allCount=allItems.length;
+  list.innerHTML=`<div class="cat-item${selectedCategoryId==='all'?' active':''}" onclick="selectCategory('all',this)">
+    <span class="cat-emoji">🍽️</span><span class="cat-name">All Items</span><span class="cat-count" id="all-count">${allCount}</span>
+  </div>`+allCategories.map(c=>{
+    const count=allItems.filter(i=>i.category_id===c.id).length;
+    return `<div class="cat-item${selectedCategoryId===c.id?' active':''}" onclick="selectCategory('${c.id}',this)">
+      <span class="cat-emoji">${c.emoji||'🍽️'}</span><span class="cat-name">${c.name}</span><span class="cat-count">${count}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectCategory(catId,el){
+  selectedCategoryId=catId;
+  document.querySelectorAll('.cat-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('items-panel-title').textContent=catId==='all'?'All Items':(allCategories.find(c=>c.id===catId)?.name||'Items');
+  renderItems();
+}
+
+function renderItems(){
+  const filtered=selectedCategoryId==='all'?allItems:allItems.filter(i=>i.category_id===selectedCategoryId);
+  const grid=document.getElementById('items-grid');
+  if(!filtered.length){grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🍽️</div><div class="empty-title">No items here</div><div class="empty-sub">Click "+ Add Item" to add your first dish</div></div>`;return;}
+  grid.innerHTML=filtered.map(item=>`
+    <div class="item-card${!item.is_available?' unavailable':''}" onclick="editItem('${item.id}')">
+      <div class="item-photo">
+        ${item.photo_url?`<img src="${item.photo_url}" alt="${item.name}">`:`<span>${item.emoji||'🍽️'}</span>`}
+        ${item.is_sold_out?'<div class="item-sold-out">SOLD OUT</div>':''}
+      </div>
+      <div class="item-body">
+        <div class="item-name">${item.name}</div>
+        ${item.description?`<div class="item-desc-prev">${item.description}</div>`:''}
+        <div class="item-price">৳${parseFloat(item.price).toLocaleString()}</div>
+        <div class="item-badges">
+          ${item.is_best_seller?'<span class="item-badge best">⭐ Best</span>':''}
+          ${item.is_spicy?'<span class="item-badge spicy">🌶️</span>':''}
+          ${item.is_veg?'<span class="item-badge veg">🥦</span>':''}
+          ${item.is_new?'<span class="item-badge new2">🆕</span>':''}
+        </div>
+      </div>
+      <div class="item-actions">
+        <div class="item-action" onclick="event.stopPropagation();editItem('${item.id}')">✏️</div>
+        <div class="item-action" onclick="event.stopPropagation();toggleSoldOut('${item.id}',${item.is_sold_out})">${item.is_sold_out?'✅':'🚫'}</div>
+        <div class="item-action del" onclick="event.stopPropagation();deleteItem('${item.id}')">🗑️</div>
+      </div>
+    </div>`).join('');
+}
+
+function populateCategorySelect(){
+  const sel=document.getElementById('item-category');if(!sel)return;
+  sel.innerHTML='<option value="">— Select Category —</option>'+
+    allCategories.map(c=>`<option value="${c.id}">${c.emoji||'🍽️'} ${c.name}</option>`).join('');
+}
+
+function openAddItemModal(){
+  editingItemId=null;uploadedPhotoUrl=null;
+  document.getElementById('item-modal-title').textContent='Add Menu Item';
+  document.getElementById('item-edit-id').value='';
+  ['item-name','item-name-bn','item-price','item-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('item-emoji').value='🍽️';
+  populateCategorySelect();
+  document.getElementById('item-category').value='';
+  ['badge-best','badge-chef','badge-spicy','badge-veg','badge-new','item-sold-out'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  document.getElementById('item-available').checked=true;
+  removePhoto();
+  openModal('item-modal');
+}
+
+function editItem(id){
+  const item=allItems.find(i=>i.id===id);if(!item)return;
+  editingItemId=id;uploadedPhotoUrl=item.photo_url||null;
+  document.getElementById('item-modal-title').textContent='Edit Item';
+  document.getElementById('item-edit-id').value=id;
+  document.getElementById('item-name').value=item.name||'';
+  document.getElementById('item-name-bn').value=item.name_bn||'';
+  document.getElementById('item-price').value=item.price||'';
+  document.getElementById('item-desc').value=item.description||'';
+  document.getElementById('item-emoji').value=item.emoji||'🍽️';
+  populateCategorySelect();
+  setTimeout(()=>{document.getElementById('item-category').value=item.category_id||'';},30);
+  document.getElementById('badge-best').checked=item.is_best_seller||false;
+  document.getElementById('badge-chef').checked=item.is_chefs_pick||false;
+  document.getElementById('badge-spicy').checked=item.is_spicy||false;
+  document.getElementById('badge-veg').checked=item.is_veg||false;
+  document.getElementById('badge-new').checked=item.is_new||false;
+  document.getElementById('item-available').checked=item.is_available!==false;
+  document.getElementById('item-sold-out').checked=item.is_sold_out||false;
+  removePhoto();
+  if(item.photo_url){
+    document.getElementById('photo-preview').src=item.photo_url;
+    document.getElementById('photo-preview').style.display='block';
+    document.getElementById('photo-placeholder').style.display='none';
+    document.getElementById('remove-photo-btn').style.display='block';
+  }
+  openModal('item-modal');
+}
+
+async function saveItem(){
+  const name=document.getElementById('item-name').value.trim();
+  const priceVal=document.getElementById('item-price').value;
+  const price=parseFloat(priceVal);
+  if(!name){showToast('Item name is required','error');return;}
+  if(!priceVal||isNaN(price)||price<=0){showToast('Valid price is required','error');return;}
+  if(!currentRestaurant){showToast('Restaurant not loaded — refresh page','error');return;}
+
+  const btn=document.getElementById('item-save-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+
+  // Photo upload (non-critical)
+  let photoUrl=uploadedPhotoUrl;
+  if(selectedPhotoFile){try{photoUrl=await uploadPhoto(editingItemId);}catch(e){photoUrl=null;}}
+
+  // GUARANTEED core columns (exist in every MenuQR installation)
+  const core={
+    restaurant_id:currentRestaurant.id,
+    name:name,
+    price:price,
+  };
+
+  // Extended columns (may or may not exist — added after migration)
+  const full={
+    ...core,
+    emoji:document.getElementById('item-emoji').value.trim()||'🍽️',
+    name_bn:document.getElementById('item-name-bn').value.trim()||null,
+    description:document.getElementById('item-desc').value.trim()||null,
+    category_id:document.getElementById('item-category').value||null,
+    is_available:document.getElementById('item-available').checked,
+    is_sold_out:document.getElementById('item-sold-out').checked,
+    is_best_seller:document.getElementById('badge-best').checked,
+    is_chefs_pick:document.getElementById('badge-chef').checked,
+    is_spicy:document.getElementById('badge-spicy').checked,
+    is_veg:document.getElementById('badge-veg').checked,
+    is_new:document.getElementById('badge-new').checked,
+    photo_url:photoUrl||null,
+  };
+
+  let error;
+
+  // Attempt 1: Full payload
+  if(editingItemId){({error}=await sb.from('menu_items').update(full).eq('id',editingItemId));}
+  else{({error}=await sb.from('menu_items').insert(full));}
+
+  // Attempt 2: If column error, try without photo_url + badges
+  if(error && error.message.includes('column')){
+    console.warn('Full save failed, trying without optional cols:', error.message);
+    const medium={...core, emoji:full.emoji, name_bn:full.name_bn, description:full.description, category_id:full.category_id, is_available:full.is_available, is_sold_out:full.is_sold_out};
+    if(editingItemId){({error}=await sb.from('menu_items').update(medium).eq('id',editingItemId));}
+    else{({error}=await sb.from('menu_items').insert(medium));}
+  }
+
+  // Attempt 3: Absolute minimum — just name, price, restaurant_id
+  if(error && error.message.includes('column')){
+    console.warn('Medium save failed, trying core only:', error.message);
+    if(editingItemId){({error}=await sb.from('menu_items').update(core).eq('id',editingItemId));}
+    else{({error}=await sb.from('menu_items').insert(core));}
+  }
+
+  btn.disabled=false;btn.textContent='Save Item';
+
+  if(error){
+    showToast('Error: '+error.message,'error');
+    console.error('saveItem final error:', JSON.stringify(error));
+    return;
+  }
+
+  showToast(editingItemId?'✅ Item updated!':'✅ Item added!','success');
+  removePhoto();closeModal('item-modal');
+  await loadMenuData();
+}
+
+async function toggleSoldOut(id,cur){
+  await sb.from('menu_items').update({is_sold_out:!cur}).eq('id',id);
+  allItems=allItems.map(i=>i.id===id?{...i,is_sold_out:!cur}:i);
+  renderItems();showToast(!cur?'Marked sold out':'Marked available','success');
+}
+
+async function deleteItem(id){
+  if(!confirm('Delete this item?'))return;
+  await sb.from('menu_items').delete().eq('id',id);
+  allItems=allItems.filter(i=>i.id!==id);
+  renderCategories();renderItems();showToast('Item deleted','success');
+}
+
+async function quickAddCat(emoji,name){
+  if(!currentRestaurant)return;
+  if(allCategories.find(c=>c.name.toLowerCase()===name.toLowerCase())){showToast(`${name} already exists`,'error');return;}
+  const{error}=await sb.from('categories').insert({restaurant_id:currentRestaurant.id,name,emoji,sort_order:allCategories.length});
+  if(error){showToast(error.message,'error');return;}
+  showToast(`${emoji} ${name} added!`,'success');
+  await loadMenuData();
+}
+
+async function saveCategory(){
+  const name=document.getElementById('cat-name').value.trim();
+  if(!name){showToast('Category name required','error');return;}
+  const{error}=await sb.from('categories').insert({
+    restaurant_id:currentRestaurant.id,name,
+    name_bn:document.getElementById('cat-name-bn').value.trim()||null,
+    emoji:document.getElementById('cat-emoji').value.trim()||'🍽️',
+    sort_order:allCategories.length,
+  });
+  if(error){showToast(error.message,'error');return;}
+  showToast('Category added!','success');
+  document.getElementById('cat-name').value='';
+  document.getElementById('cat-name-bn').value='';
+  document.getElementById('cat-emoji').value='';
+  closeModal('category-modal');await loadMenuData();
+}
+
+// QR CODES
+async function loadTables(){
+  if(!currentRestaurant)return;
+  const{data}=await sb.from('restaurant_tables').select('*').eq('restaurant_id',currentRestaurant.id).order('created_at');
+  allTables=data||[];renderQRCodes();
+  const tc=document.getElementById('current-table-count');
+  if(tc)tc.textContent=allTables.length||'—';
+}
+
+function renderQRCodes(){
+  const grid=document.getElementById('qr-grid');
+  if(!allTables.length){grid.innerHTML=`<div class="empty-state"><div class="empty-icon">📱</div><div class="empty-title">No tables yet</div><div class="empty-sub">Add tables to generate QR codes</div></div>`;return;}
+  grid.innerHTML=allTables.map(t=>`
+    <div class="qr-card" id="qr-card-${t.id}">
+      <canvas id="qr-${t.id}" class="qr-canvas" width="170" height="170"></canvas>
+      <div class="qr-table-name">Table ${t.table_number}</div>
+      ${t.label?`<div class="qr-table-label">${t.label}</div>`:''}
+      <div class="qr-url" id="qr-url-${t.id}">Generating...</div>
+      <div class="qr-actions">
+        <button class="qr-btn dl" onclick="downloadQR('${t.id}','${t.table_number}')">⬇ Download</button>
+        <button class="qr-btn cp" onclick="copyQRUrl('${t.id}')">📋 Copy</button>
+      </div>
+    </div>`).join('');
+  setTimeout(()=>{
+    allTables.forEach(t=>{
+      const slug=currentRestaurant?.slug||'restaurant';
+      const url=`${window.location.origin}/menu.html?r=${slug}&t=${encodeURIComponent(t.table_number)}`;
+      const urlEl=document.getElementById(`qr-url-${t.id}`);
+      const canvas=document.getElementById(`qr-${t.id}`);
+      if(urlEl)urlEl.textContent=url;
+      if(canvas&&typeof QRCode!=='undefined'){
+        QRCode.toCanvas(canvas,url,{width:170,margin:1,color:{dark:'#0D1A0E',light:'#FFFFFF'}},
+          err=>{if(err)console.warn('QR:',err);});
+      }
+    });
+  },120);
+}
+
+function openAddTableModal(){openModal('table-modal');}
+async function saveTable(){
+  const num=document.getElementById('table-number').value.trim();
+  if(!num){showToast('Table number required','error');return;}
+  const{error}=await sb.from('restaurant_tables').insert({
+    restaurant_id:currentRestaurant.id,table_number:num,
+    label:document.getElementById('table-label').value.trim()||null,is_active:true,
+  });
+  if(error){showToast(error.message,'error');return;}
+  showToast('Table added & QR generated! 🎉','success');
+  closeModal('table-modal');
+  document.getElementById('table-number').value='';
+  document.getElementById('table-label').value='';
+  await loadTables();
+}
+
+function downloadQR(tableId,tableNum){
+  const canvas=document.getElementById(`qr-${tableId}`);if(!canvas)return;
+  const link=document.createElement('a');
+  link.download=`menuqr-table-${tableNum}.png`;
+  link.href=canvas.toDataURL('image/png');
+  link.click();showToast(`QR for Table ${tableNum} downloaded!`,'success');
+}
+
+function copyQRUrl(tableId){
+  const url=document.getElementById(`qr-url-${tableId}`)?.textContent;
+  if(!url||url==='Generating...')return;
+  navigator.clipboard.writeText(url).then(()=>showToast('Link copied!','success'));
+}
+
+async function addMoreTables(){
+  const count=parseInt(document.getElementById('set-new-tables').value);
+  if(!count||count<1){showToast('Enter number of tables','error');return;}
+  const{data:existing}=await sb.from('restaurant_tables').select('table_number').eq('restaurant_id',currentRestaurant.id);
+  const nums=(existing||[]).map(t=>parseInt(t.table_number)).filter(n=>!isNaN(n));
+  const start=nums.length?Math.max(...nums)+1:1;
+  const rows=Array.from({length:count},(_,i)=>({restaurant_id:currentRestaurant.id,table_number:String(start+i),is_active:true}));
+  const{error}=await sb.from('restaurant_tables').insert(rows);
+  if(error){showToast(error.message,'error');return;}
+  showToast(`${count} tables added!`,'success');
+  document.getElementById('set-new-tables').value='';
+  await loadTables();
+}
+
+// SETTINGS
+async function saveSettings(){
+  const name=document.getElementById('set-name').value.trim();
+  if(!name){showToast('Restaurant name required','error');return;}
+  if(!currentRestaurant){showToast('Restaurant not loaded — refresh page','error');return;}
+
+  const payload={
+    name,
+    whatsapp:document.getElementById('set-whatsapp').value.trim()||null,
+    city:document.getElementById('set-city').value.trim()||null,
+    description:document.getElementById('set-desc').value.trim()||null,
+  };
+
+  // Only add new columns if they've been migrated
+  const sp=document.getElementById('set-specialty').value.trim();
+  const ad=document.getElementById('set-address').value.trim();
+  const on=document.getElementById('set-owner-name').value.trim();
+  const op=document.getElementById('set-owner-phone').value.trim();
+  if(sp)payload.specialty=sp;
+  if(ad)payload.address=ad;
+  if(on)payload.owner_name=on;
+  if(op)payload.owner_phone=op;
+
+  const{error}=await sb.from('restaurants').update(payload).eq('id',currentRestaurant.id);
+  if(error){
+    // If new columns caused failure, retry with only original columns
+    if(error.message.includes('column')){
+      const{error:e2}=await sb.from('restaurants').update({
+        name,
+        whatsapp:document.getElementById('set-whatsapp').value.trim()||null,
+        city:document.getElementById('set-city').value.trim()||null,
+        description:document.getElementById('set-desc').value.trim()||null,
+      }).eq('id',currentRestaurant.id);
+      if(e2){showToast('Save failed: '+e2.message,'error');console.error('Settings save error:',e2);return;}
+      showToast('✅ Saved! (Run SQL migration to save Speciality/Address/Owner fields)','success');
+    } else {
+      showToast('Save failed: '+error.message,'error');
+      console.error('Settings save error:',error);
+      return;
+    }
+  } else {
+    showToast('✅ Settings saved!','success');
+  }
+
+  if(on) await sb.auth.updateUser({data:{full_name:on}});
+  document.getElementById('rest-name').textContent=name;
+  document.getElementById('rest-avatar').textContent=name[0].toUpperCase();
+  currentRestaurant={...currentRestaurant,...payload};
+}
+
+async function toggleOnline(){
+  const tog=document.getElementById('online-toggle');
+  const isOn=tog.classList.contains('on');
+  tog.classList.toggle('on');
+  document.getElementById('online-label').textContent=isOn?'Restaurant Closed':'Restaurant Open';
+  if(currentRestaurant)await sb.from('restaurants').update({is_open:!isOn}).eq('id',currentRestaurant.id);
+  showToast(isOn?'Restaurant closed 🔴':'Restaurant open 🟢','success');
+}
+
+// REALTIME
+function startRealtimeSubscription(){
+  if(!currentRestaurant)return;
+  sb.channel('orders-channel')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',filter:`restaurant_id=eq.${currentRestaurant.id}`},
+      async(payload)=>{allOrders.unshift(payload.new);renderOrders();updateNewOrdersBadge();await loadOverviewStats();showToast(`🛎️ New order ${payload.new.order_number||''} — Table ${payload.new.table_number||'?'}!`,'success');})
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',filter:`restaurant_id=eq.${currentRestaurant.id}`},
+      (payload)=>{allOrders=allOrders.map(o=>o.id===payload.new.id?{...o,...payload.new}:o);renderOrders();})
+    .subscribe();
+}
+
+// NAV
+const pageTitles={overview:'Overview',orders:'Orders',menu:'Menu Manager',qr:'QR Codes',settings:'Settings'};
+function navTo(page){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`view-${page}`).classList.add('active');
+  document.getElementById(`nav-${page}`)?.classList.add('active');
+  document.getElementById('page-title').textContent=pageTitles[page]||page;
+  closeSidebar();
+}
+
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function openAddCategoryModal(){
+  document.getElementById('cat-name').value='';
+  document.getElementById('cat-name-bn').value='';
+  document.getElementById('cat-emoji').value='';
+  openModal('category-modal');
+}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');}));
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebar-overlay').classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('show');}
+async function handleLogout(){await sb.auth.signOut();window.location.href='auth.html';}
+
+function showToast(msg,type=''){
+  const wrap=document.getElementById('toast-wrap');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;t.innerHTML=`<span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';setTimeout(()=>t.remove(),300);},3500);
+}
+</script>
+</body>
+</html>
