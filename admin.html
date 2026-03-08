@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MenuQR Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0C0F;
+  --bg2:#111318;
+  --bg3:#181C23;
+  --card:#13161D;
+  --border:#1F2430;
+  --border2:#2A3040;
+  --text:#E8ECF4;
+  --text2:#8892A4;
+  --muted:#4A5568;
+  --green:#22C55E;
+  --green-dim:#16A34A;
+  --green-bg:rgba(34,197,94,0.08);
+  --amber:#F59E0B;
+  --amber-bg:rgba(245,158,11,0.08);
+  --red:#EF4444;
+  --red-bg:rgba(239,68,68,0.08);
+  --blue:#3B82F6;
+  --blue-bg:rgba(59,130,246,0.08);
+  --pro:#C8A96E;
+  --radius:12px;
+  --pill:100px;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── LOGIN GATE ── */
+#login-gate{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  z-index:999;flex-direction:column;gap:0;
+}
+.gate-box{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:20px;padding:48px 40px;width:100%;max-width:380px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03),0 32px 64px rgba(0,0,0,.5);
+}
+.gate-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-.02em}
+.gate-logo span{color:var(--green)}
+.gate-sub{font-size:13px;color:var(--text2);margin-bottom:32px}
+.gate-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.gate-input{
+  width:100%;background:var(--bg2);border:1.5px solid var(--border2);
+  border-radius:10px;padding:13px 16px;
+  font-size:15px;font-family:var(--font-mono);color:var(--text);
+  outline:none;transition:border-color .2s;margin-bottom:16px;
+  -webkit-text-security:disc;
+}
+.gate-input:focus{border-color:var(--green)}
+.gate-input.shake{animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.gate-btn{
+  width:100%;padding:14px;background:var(--green);color:#0A0C0F;
+  border:none;border-radius:var(--pill);font-size:15px;font-weight:700;
+  font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;
+}
+.gate-btn:hover{background:#16A34A;transform:translateY(-1px)}
+.gate-err{font-size:13px;color:var(--red);margin-top:10px;text-align:center;min-height:18px}
+
+/* ── MAIN APP ── */
+#app{display:none}
+#app.show{display:block}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,12,15,.9);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 28px;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.02em}
+.topbar-logo span{color:var(--green)}
+.topbar-badge{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;
+  background:var(--green-bg);color:var(--green);
+  border:1px solid rgba(34,197,94,.2);border-radius:4px;
+  padding:3px 8px;margin-left:10px;letter-spacing:.05em;
+}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-time{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.logout-btn{
+  padding:7px 16px;background:transparent;border:1px solid var(--border2);
+  border-radius:var(--pill);font-size:13px;font-weight:600;color:var(--text2);
+  cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;
+}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── NAV TABS ── */
+.nav-tabs{
+  display:flex;gap:4px;padding:16px 28px 0;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.nav-tab{
+  padding:10px 18px;border-radius:8px 8px 0 0;
+  font-size:13px;font-weight:600;cursor:pointer;
+  color:var(--text2);border:1px solid transparent;
+  border-bottom:none;transition:all .15s;
+  position:relative;bottom:-1px;
+}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{
+  background:var(--bg2);color:var(--text);
+  border-color:var(--border);border-bottom-color:var(--bg2);
+}
+.nav-tab .tab-count{
+  font-family:var(--font-mono);font-size:10px;
+  background:var(--bg3);color:var(--text2);
+  padding:2px 6px;border-radius:4px;margin-left:6px;
+}
+.nav-tab.active .tab-count{background:var(--green-bg);color:var(--green)}
+
+/* ── PAGE ── */
+.page{padding:28px;max-width:1300px;margin:0 auto}
+.view{display:none}
+.view.active{display:block}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden;
+  transition:border-color .2s;
+}
+.stat-card:hover{border-color:var(--border2)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.green::before{background:var(--green)}
+.stat-card.amber::before{background:var(--amber)}
+.stat-card.red::before{background:var(--red)}
+.stat-card.blue::before{background:var(--blue)}
+.stat-card.pro::before{background:var(--pro)}
+.stat-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.stat-value{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--text);letter-spacing:-.03em;line-height:1}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:6px}
+.stat-icon{position:absolute;right:16px;top:16px;font-size:22px;opacity:.3}
+
+/* ── SECTION TITLE ── */
+.section-title{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+  color:var(--text);margin-bottom:4px;letter-spacing:-.01em;
+}
+.section-sub{font-size:13px;color:var(--text2);margin-bottom:16px}
+
+/* ── TABLE ── */
+.data-table-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:28px;
+}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.1em;
+  padding:12px 16px;text-align:left;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+.data-table td{
+  padding:14px 16px;font-size:13px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,255,255,.015)}
+.data-table .mono{font-family:var(--font-mono);font-size:12px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.04em;white-space:nowrap;font-family:var(--font-mono)}
+.badge.trial{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.badge.basic{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.badge.pro{background:rgba(200,169,110,.1);color:var(--pro);border:1px solid rgba(200,169,110,.2)}
+.badge.free{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.badge.pending{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.badge.paid{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.badge.failed{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.badge.urgent{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+
+/* ── ACTION BUTTONS ── */
+.action-btn{
+  padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;
+  cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.action-btn.activate{background:var(--green);color:#0A0C0F}
+.action-btn.activate:hover{background:#16A34A;transform:translateY(-1px)}
+.action-btn.activate:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.action-btn.reject{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.action-btn.reject:hover{background:rgba(239,68,68,.15)}
+.action-btn.view{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.action-btn.view:hover{border-color:var(--text2);color:var(--text)}
+
+/* ── DAYS LEFT PILL ── */
+.days-left{font-family:var(--font-mono);font-size:11px;font-weight:600}
+.days-left.ok{color:var(--green)}
+.days-left.warn{color:var(--amber)}
+.days-left.expired{color:var(--red)}
+
+/* ── PENDING PAYMENT CARD ── */
+.pending-alert{
+  background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);
+  border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;
+  display:flex;align-items:center;gap:12px;font-size:13px;color:var(--amber);
+}
+.pending-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── RESTAURANT DETAIL DRAWER ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;backdrop-filter:blur(4px)}
+.drawer-overlay.show{display:block}
+.drawer{
+  position:fixed;right:0;top:0;bottom:0;width:420px;
+  background:var(--bg2);border-left:1px solid var(--border2);
+  z-index:201;overflow-y:auto;padding:28px;
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+.drawer.show{transform:translateX(0)}
+.drawer-close{
+  position:absolute;top:20px;right:20px;
+  width:32px;height:32px;border-radius:8px;
+  background:var(--bg3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;color:var(--text2);
+}
+.drawer-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;margin-right:40px}
+.drawer-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row:last-child{border-bottom:none}
+.detail-key{color:var(--text2);font-weight:500}
+.detail-val{color:var(--text);font-weight:600;font-family:var(--font-mono);font-size:12px;text-align:right}
+.drawer-section{margin-top:24px;margin-bottom:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+
+/* Plan change section in drawer */
+.plan-change-wrap{margin-top:20px;padding:16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)}
+.plan-change-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
+.plan-select{
+  width:100%;background:var(--bg2);border:1.5px solid var(--border2);
+  border-radius:8px;padding:10px 12px;font-size:14px;
+  color:var(--text);outline:none;margin-bottom:10px;
+  font-family:'DM Sans',sans-serif;
+}
+.plan-select:focus{border-color:var(--green)}
+.plan-save-btn{
+  width:100%;padding:11px;background:var(--green);color:#0A0C0F;
+  border:none;border-radius:8px;font-size:14px;font-weight:700;
+  font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;
+}
+.plan-save-btn:hover{background:#16A34A}
+
+/* ── SEARCH BAR ── */
+.search-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:10px 16px;margin-bottom:16px;
+}
+.search-input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;
+}
+.search-input::placeholder{color:var(--muted)}
+.search-icon{color:var(--muted);font-size:16px}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:14px}
+
+/* ── REFRESH BTN ── */
+.refresh-btn{
+  padding:8px 16px;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:8px;font-size:13px;font-weight:600;color:var(--text2);
+  cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.refresh-btn:hover{border-color:var(--green);color:var(--green)}
+.spin{animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(10px);
+  padding:10px 22px;border-radius:var(--pill);font-size:14px;font-weight:600;
+  opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap;
+  font-family:'DM Sans',sans-serif;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.green{background:var(--green);color:#0A0C0F}
+.toast.red{background:var(--red);color:#fff}
+.toast.default{background:var(--card);color:var(--text);border:1px solid var(--border2)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+@media(max-width:700px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .drawer{width:100%}
+  .page{padding:16px}
+  .topbar{padding:0 16px}
+  .nav-tabs{padding:12px 16px 0;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate">
+  <div class="gate-box">
+    <div class="gate-logo">Menu<span>QR</span> <span style="font-size:13px;color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:400">Admin</span></div>
+    <div class="gate-sub">Restricted access — owner only</div>
+    <div class="gate-label">Admin Password</div>
+    <input class="gate-input" id="gate-pw" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkGate()">
+    <button class="gate-btn" onclick="checkGate()">Enter Admin Panel →</button>
+    <div class="gate-err" id="gate-err"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:0">
+      <div class="topbar-logo">Menu<span>QR</span></div>
+      <div class="topbar-badge">ADMIN</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock">--:--:--</div>
+      <button class="logout-btn" onclick="adminLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" id="tab-overview" onclick="switchTab('overview')">
+      Overview
+    </div>
+    <div class="nav-tab" id="tab-restaurants" onclick="switchTab('restaurants')">
+      Restaurants <span class="tab-count" id="count-restaurants">—</span>
+    </div>
+    <div class="nav-tab" id="tab-payments" onclick="switchTab('payments')">
+      Payments <span class="tab-count" id="count-payments">—</span>
+    </div>
+    <div class="nav-tab" id="tab-pending" onclick="switchTab('pending')">
+      Pending <span class="tab-count" id="count-pending">—</span>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="view active" id="view-overview">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card green"><div class="stat-icon">🏪</div><div class="stat-label">Total Restaurants</div><div class="stat-value" id="s-total">—</div><div class="stat-sub">All time signups</div></div>
+        <div class="stat-card amber"><div class="stat-icon">⏳</div><div class="stat-label">Active Trials</div><div class="stat-value" id="s-trial">—</div><div class="stat-sub">Within 14 days</div></div>
+        <div class="stat-card blue"><div class="stat-icon">⚡</div><div class="stat-label">Basic Plan</div><div class="stat-value" id="s-basic">—</div><div class="stat-sub">Paying customers</div></div>
+        <div class="stat-card pro"><div class="stat-icon">👑</div><div class="stat-label">Pro Plan</div><div class="stat-value" id="s-pro">—</div><div class="stat-sub">Premium customers</div></div>
+        <div class="stat-card red"><div class="stat-icon">💀</div><div class="stat-label">Expired Trials</div><div class="stat-value" id="s-expired">—</div><div class="stat-sub">Need follow-up</div></div>
+        <div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-label">Total Revenue</div><div class="stat-value" id="s-revenue">—</div><div class="stat-sub">Confirmed payments</div></div>
+      </div>
+
+      <!-- Expiring soon -->
+      <div class="section-title">⚠️ Expiring Soon</div>
+      <div class="section-sub">Trials ending in 3 days or less — contact these owners</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Restaurant</th><th>Owner Email</th><th>Days Left</th><th>WhatsApp</th><th>Action</th></tr></thead>
+          <tbody id="expiring-body"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Recent signups -->
+      <div class="section-title">🆕 Recent Signups</div>
+      <div class="section-sub">Last 10 restaurants that joined</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Restaurant</th><th>Joined</th><th>Plan</th><th>City</th><th>Action</th></tr></thead>
+          <tbody id="recent-body"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── RESTAURANTS ── -->
+    <div class="view" id="view-restaurants">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="section-title">All Restaurants</div>
+          <div class="section-sub" style="margin-bottom:0">Every restaurant on MenuQR</div>
+        </div>
+        <button class="refresh-btn" onclick="loadAll()"><span id="refresh-icon">↻</span> Refresh</button>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="rest-search" placeholder="Search by name, city, email..." oninput="filterRestaurants()">
+      </div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Restaurant</th><th>Owner</th><th>Plan</th><th>Trial / Expiry</th><th>City</th><th>Tables</th><th>Action</th></tr></thead>
+          <tbody id="restaurants-body"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ALL PAYMENTS ── -->
+    <div class="view" id="view-payments">
+      <div class="section-title">Payment History</div>
+      <div class="section-sub">All submitted payments across all restaurants</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Restaurant</th><th>Method</th><th>Plan</th><th>Amount</th><th>TrxID</th><th>Phone</th><th>Status</th></tr></thead>
+          <tbody id="payments-body"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── PENDING PAYMENTS ── -->
+    <div class="view" id="view-pending">
+      <div id="pending-alert-box" class="pending-alert" style="display:none">
+        <div class="pending-dot"></div>
+        <span id="pending-alert-text">Loading pending payments...</span>
+      </div>
+      <div class="section-title">Pending Payments</div>
+      <div class="section-sub">Verify TrxID and activate the plan with one click</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Submitted</th><th>Restaurant</th><th>Method</th><th>Plan</th><th>Amount</th><th>TrxID</th><th>Phone</th><th>Action</th></tr></thead>
+          <tbody id="pending-body"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+</div><!-- /app -->
+
+<!-- Restaurant Detail Drawer -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-close" onclick="closeDrawer()">✕</div>
+  <div class="drawer-title" id="drawer-name">Restaurant</div>
+  <div class="drawer-sub" id="drawer-slug"></div>
+  <div id="drawer-content"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const{createClient}=supabase;
+const sb=createClient(
+  'https://jkskdvvisfmezcqvamfy.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imprc2tkdnZpc2ZtZXpjcXZhbWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2OTYzNzMsImV4cCI6MjA4ODI3MjM3M30.AxQwKmgaMdRcGyVXDPkZwnjTTqWk9nku0EvCpE37Ve4'
+);
+
+// ── ADMIN PASSWORD ──
+const ADMIN_PASS = 'menuqr@admin2026';
+
+// ── DATA CACHE ──
+let allRestaurants = [];
+let allPayments = [];
+let allUsers = {};
+
+// ── CLOCK ──
+setInterval(()=>{
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-BD',{hour12:false});
+},1000);
+
+// ── LOGIN GATE ──
+function checkGate(){
+  const pw = document.getElementById('gate-pw').value;
+  if(pw === ADMIN_PASS){
+    document.getElementById('login-gate').style.display='none';
+    document.getElementById('app').classList.add('show');
+    loadAll();
+  } else {
+    const inp = document.getElementById('gate-pw');
+    inp.classList.remove('shake');
+    void inp.offsetWidth;
+    inp.classList.add('shake');
+    document.getElementById('gate-err').textContent = 'Incorrect password. Try again.';
+    inp.value='';
+    inp.focus();
+  }
+}
+document.getElementById('gate-pw').addEventListener('keydown', e=>{
+  if(e.key==='Enter') checkGate();
+});
+
+function adminLogout(){
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-gate').style.display='flex';
+  document.getElementById('gate-pw').value='';
+  document.getElementById('gate-err').textContent='';
+}
+
+// ── TAB SWITCH ──
+function switchTab(tab){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('view-'+tab).classList.add('active');
+}
+
+// ── LOAD ALL DATA ──
+async function loadAll(){
+  const icon = document.getElementById('refresh-icon');
+  if(icon) icon.classList.add('spin');
+
+  try{
+    // Load restaurants
+    const {data:rests} = await sb.from('restaurants')
+      .select('*')
+      .order('created_at', {ascending:false});
+    allRestaurants = rests || [];
+
+    // Load payments
+    const {data:pays} = await sb.from('payments')
+      .select('*')
+      .order('created_at', {ascending:false});
+    allPayments = pays || [];
+
+    // Render everything
+    renderStats();
+    renderOverview();
+    renderRestaurants();
+    renderPayments();
+    renderPending();
+
+  } catch(err){
+    showToast('Load error: '+err.message, 'red');
+  } finally {
+    if(icon){ icon.classList.remove('spin'); }
+  }
+}
+
+// ── STATS ──
+function renderStats(){
+  const now = new Date();
+  const total = allRestaurants.length;
+  const trials = allRestaurants.filter(r=>{
+    const plan = r.plan||'trial';
+    const days = Math.floor((now - new Date(r.trial_started_at||r.created_at))/86400000);
+    return (plan==='trial'||plan==='free') && days < 14;
+  }).length;
+  const basic = allRestaurants.filter(r=>r.plan==='basic').length;
+  const pro = allRestaurants.filter(r=>r.plan==='pro').length;
+  const expired = allRestaurants.filter(r=>{
+    const plan = r.plan||'trial';
+    const days = Math.floor((now - new Date(r.trial_started_at||r.created_at))/86400000);
+    return (plan==='trial'||plan==='free') && days >= 14;
+  }).length;
+  const revenue = allPayments.filter(p=>p.status==='paid').reduce((s,p)=>s+parseFloat(p.amount||0),0);
+
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-trial').textContent = trials;
+  document.getElementById('s-basic').textContent = basic;
+  document.getElementById('s-pro').textContent = pro;
+  document.getElementById('s-expired').textContent = expired;
+  document.getElementById('s-revenue').textContent = '৳'+revenue.toLocaleString();
+
+  // Tab counts
+  document.getElementById('count-restaurants').textContent = total;
+  const pending = allPayments.filter(p=>p.status==='pending').length;
+  document.getElementById('count-payments').textContent = allPayments.length;
+  document.getElementById('count-pending').textContent = pending;
+
+  // Pending alert
+  const alertBox = document.getElementById('pending-alert-box');
+  if(pending > 0){
+    alertBox.style.display='flex';
+    document.getElementById('pending-alert-text').textContent =
+      `${pending} payment${pending>1?'s':''} waiting for verification — activate now`;
+    document.getElementById('tab-pending').style.color='var(--amber)';
+  }
+}
+
+// ── OVERVIEW ──
+function renderOverview(){
+  const now = new Date();
+
+  // Expiring soon (≤3 days)
+  const expiring = allRestaurants.filter(r=>{
+    const plan = r.plan||'trial';
+    if(plan!=='trial'&&plan!=='free') return false;
+    const days = Math.floor((now - new Date(r.trial_started_at||r.created_at))/86400000);
+    const left = 14 - days;
+    return left >= 0 && left <= 3;
+  }).sort((a,b)=>{
+    const da = 14-Math.floor((now-new Date(a.trial_started_at||a.created_at))/86400000);
+    const db = 14-Math.floor((now-new Date(b.trial_started_at||b.created_at))/86400000);
+    return da-db;
+  });
+
+  const expBody = document.getElementById('expiring-body');
+  if(!expiring.length){
+    expBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">
+      <div style="font-size:28px;margin-bottom:8px">✅</div>No trials expiring in the next 3 days</td></tr>`;
+  } else {
+    expBody.innerHTML = expiring.map(r=>{
+      const days = 14 - Math.floor((now-new Date(r.trial_started_at||r.created_at))/86400000);
+      const cls = days<=1?'expired':days<=2?'warn':'ok';
+      const waCls = r.whatsapp?`<a href="https://wa.me/${r.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:var(--green);font-size:12px;font-family:var(--font-mono)">📱 ${r.whatsapp}</a>`:'<span style="color:var(--muted)">—</span>';
+      return `<tr>
+        <td><span style="font-weight:700;color:var(--text)">${esc(r.name||'Unnamed')}</span></td>
+        <td class="mono" style="color:var(--text2)">${esc(r.owner_name||'—')}</td>
+        <td><span class="days-left ${cls}">${days <= 0 ? 'EXPIRED' : days+' day'+(days!==1?'s':'')}</span></td>
+        <td>${waCls}</td>
+        <td><button class="action-btn view" onclick="openDrawer('${r.id}')">View →</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Recent signups
+  const recent = allRestaurants.slice(0, 10);
+  const recBody = document.getElementById('recent-body');
+  recBody.innerHTML = recent.map(r=>{
+    const date = new Date(r.created_at).toLocaleDateString('en-BD',{day:'2-digit',month:'short'});
+    return `<tr>
+      <td><span style="font-weight:700;color:var(--text)">${esc(r.name||'Unnamed')}</span><br><span class="mono" style="color:var(--muted);font-size:10px">${esc(r.slug||'')}</span></td>
+      <td class="mono" style="color:var(--text2);font-size:11px">${date}</td>
+      <td>${planBadge(r.plan||'trial')}</td>
+      <td style="color:var(--text2);font-size:13px">${esc(r.city||'—')}</td>
+      <td><button class="action-btn view" onclick="openDrawer('${r.id}')">View →</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RESTAURANTS TABLE ──
+let filteredRests = [];
+function renderRestaurants(){
+  filteredRests = [...allRestaurants];
+  renderRestaurantsTable();
+}
+function filterRestaurants(){
+  const q = document.getElementById('rest-search').value.toLowerCase().trim();
+  filteredRests = q ? allRestaurants.filter(r=>
+    (r.name||'').toLowerCase().includes(q)||
+    (r.city||'').toLowerCase().includes(q)||
+    (r.slug||'').toLowerCase().includes(q)||
+    (r.whatsapp||'').includes(q)
+  ) : [...allRestaurants];
+  renderRestaurantsTable();
+}
+function renderRestaurantsTable(){
+  const now = new Date();
+  const tbody = document.getElementById('restaurants-body');
+  if(!filteredRests.length){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No restaurants found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filteredRests.map(r=>{
+    const plan = r.plan||'trial';
+    const start = new Date(r.trial_started_at||r.created_at);
+    const daysUsed = Math.floor((now-start)/86400000);
+    let trialInfo = '';
+    if(plan==='trial'||plan==='free'){
+      const left = 14-daysUsed;
+      const cls = left<=0?'expired':left<=3?'warn':'ok';
+      trialInfo = `<span class="days-left ${cls}">${left<=0?'EXPIRED':left+'d left'}</span>`;
+    } else if(r.plan_expires_at){
+      const exp = new Date(r.plan_expires_at);
+      const daysLeft = Math.ceil((exp-now)/86400000);
+      const cls = daysLeft<=3?'warn':'ok';
+      trialInfo = `<span class="days-left ${cls}">exp ${exp.toLocaleDateString('en-BD',{day:'2-digit',month:'short'})}</span>`;
+    } else {
+      trialInfo = `<span class="days-left ok">active</span>`;
+    }
+    return `<tr>
+      <td>
+        <div style="font-weight:700;color:var(--text)">${esc(r.name||'Unnamed')}</div>
+        <div class="mono" style="color:var(--muted);font-size:10px">${esc(r.slug||'no-slug')}</div>
+      </td>
+      <td class="mono" style="color:var(--text2);font-size:11px">${esc(r.whatsapp||'—')}</td>
+      <td>${planBadge(plan)}</td>
+      <td>${trialInfo}</td>
+      <td style="color:var(--text2)">${esc(r.city||'—')}</td>
+      <td style="color:var(--text2);text-align:center">—</td>
+      <td><button class="action-btn view" onclick="openDrawer('${r.id}')">View →</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── PAYMENTS TABLE ──
+function renderPayments(){
+  const tbody = document.getElementById('payments-body');
+  if(!allPayments.length){
+    tbody.innerHTML=`<tr><td colspan="8" class="empty-state"><div class="empty-icon">💳</div><div class="empty-text">No payments yet</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = allPayments.map(p=>{
+    const rest = allRestaurants.find(r=>r.id===p.restaurant_id);
+    const date = new Date(p.created_at).toLocaleDateString('en-BD',{day:'2-digit',month:'short',year:'numeric'});
+    const methodIcon = p.method==='nagad'?'🟠':p.method==='rocket'?'🟣':'🟣';
+    return `<tr>
+      <td class="mono" style="font-size:11px;color:var(--text2)">${date}</td>
+      <td style="font-weight:600;color:var(--text)">${esc(rest?.name||'Unknown')}</td>
+      <td>${methodIcon} <span style="font-size:12px;text-transform:capitalize">${p.method}</span></td>
+      <td>${planBadge(p.plan)}</td>
+      <td style="font-family:var(--font-mono);font-weight:700;color:var(--text)">৳${p.amount}</td>
+      <td class="mono" style="color:var(--pro);font-size:11px">${esc(p.trx_id||'—')}</td>
+      <td class="mono" style="color:var(--text2);font-size:11px">${esc(p.customer_phone||'—')}</td>
+      <td>${statusBadge(p.status)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── PENDING PAYMENTS ──
+function renderPending(){
+  const pending = allPayments.filter(p=>p.status==='pending');
+  const tbody = document.getElementById('pending-body');
+  if(!pending.length){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:48px;color:var(--muted)">
+      <div style="font-size:36px;margin-bottom:10px">✅</div>No pending payments right now</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = pending.map(p=>{
+    const rest = allRestaurants.find(r=>r.id===p.restaurant_id);
+    const date = new Date(p.created_at).toLocaleString('en-BD',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const methodIcon = p.method==='nagad'?'🟠':p.method==='rocket'?'🟣':'🟣';
+    const methodName = p.method==='nagad'?'Nagad':p.method==='rocket'?'Rocket':'bKash';
+    return `<tr id="pending-row-${p.id}">
+      <td class="mono" style="font-size:11px;color:var(--text2)">${date}</td>
+      <td><span style="font-weight:700;color:var(--text)">${esc(rest?.name||'Unknown')}</span><br>
+        <span class="mono" style="color:var(--muted);font-size:10px">${esc(rest?.slug||'')}</span></td>
+      <td>${methodIcon} ${methodName}</td>
+      <td>${planBadge(p.plan)}</td>
+      <td style="font-family:var(--font-mono);font-weight:700;color:var(--text)">৳${p.amount}</td>
+      <td>
+        <span class="mono" style="color:var(--pro);font-size:13px;font-weight:600;letter-spacing:.05em">${esc(p.trx_id||'—')}</span>
+        <br><a href="https://wa.me/${(p.customer_phone||'').replace(/\D/g,'')}" target="_blank" style="font-size:10px;color:var(--green)">📱 Verify on WhatsApp</a>
+      </td>
+      <td class="mono" style="color:var(--text2);font-size:11px">${esc(p.customer_phone||'—')}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="action-btn activate" id="act-btn-${p.id}" onclick="activatePayment('${p.id}','${p.restaurant_id}','${p.plan}','${p.trx_id}')">
+          ✓ Activate
+        </button>
+        <button class="action-btn reject" onclick="rejectPayment('${p.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ACTIVATE PAYMENT ──
+async function activatePayment(paymentId, restId, plan, trxId){
+  const btn = document.getElementById('act-btn-'+paymentId);
+  if(!confirm(`Activate ${plan.toUpperCase()} plan for TrxID: ${trxId}?\n\nThis will:\n• Mark payment as PAID\n• Set restaurant plan to ${plan}\n• Set expiry to 30 days from now`)) return;
+
+  btn.disabled=true;
+  btn.textContent='...';
+
+  try{
+    // 1. Update payment status
+    const {error:e1} = await sb.from('payments')
+      .update({status:'paid', verified_at: new Date().toISOString()})
+      .eq('id', paymentId);
+    if(e1) throw e1;
+
+    // 2. Update restaurant plan
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate()+30);
+    const {error:e2} = await sb.from('restaurants')
+      .update({plan, plan_expires_at: expiry.toISOString()})
+      .eq('id', restId);
+    if(e2) throw e2;
+
+    // Update local data
+    const p = allPayments.find(x=>x.id===paymentId);
+    if(p) p.status='paid';
+    const r = allRestaurants.find(x=>x.id===restId);
+    if(r){ r.plan=plan; r.plan_expires_at=expiry.toISOString(); }
+
+    // Remove row from pending
+    const row = document.getElementById('pending-row-'+paymentId);
+    if(row){ row.style.opacity='0.4'; row.style.transition='opacity .3s'; setTimeout(()=>row.remove(),400); }
+
+    renderStats();
+    showToast(`✅ ${plan.toUpperCase()} activated for ${trxId}`, 'green');
+
+  } catch(err){
+    btn.disabled=false;
+    btn.textContent='✓ Activate';
+    showToast('Error: '+err.message, 'red');
+  }
+}
+
+// ── REJECT PAYMENT ──
+async function rejectPayment(paymentId){
+  if(!confirm('Mark this payment as failed/rejected?')) return;
+  const {error} = await sb.from('payments').update({status:'failed'}).eq('id',paymentId);
+  if(error){showToast(error.message,'red');return;}
+  const p = allPayments.find(x=>x.id===paymentId);
+  if(p) p.status='failed';
+  const row = document.getElementById('pending-row-'+paymentId);
+  if(row){ row.style.opacity='0'; setTimeout(()=>row.remove(),400); }
+  renderStats();
+  showToast('Payment marked as failed','default');
+}
+
+// ── DRAWER ──
+function openDrawer(restId){
+  const r = allRestaurants.find(x=>x.id===restId);
+  if(!r) return;
+  document.getElementById('drawer-name').textContent = r.name||'Unnamed Restaurant';
+  document.getElementById('drawer-slug').textContent = r.slug ? `menuqr-iota.vercel.app/menu.html?r=${r.slug}` : 'No slug set';
+
+  const now = new Date();
+  const plan = r.plan||'trial';
+  const daysUsed = Math.floor((now-new Date(r.trial_started_at||r.created_at))/86400000);
+  const daysLeft = Math.max(0,14-daysUsed);
+  const payments = allPayments.filter(p=>p.restaurant_id===restId);
+  const paidTotal = payments.filter(p=>p.status==='paid').reduce((s,p)=>s+parseFloat(p.amount||0),0);
+
+  document.getElementById('drawer-content').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Plan</span><span class="detail-val">${planBadge(plan)}</span></div>
+    <div class="detail-row"><span class="detail-key">Trial days left</span><span class="detail-val">${plan==='trial'?daysLeft+'d':'-'}</span></div>
+    <div class="detail-row"><span class="detail-key">Plan expires</span><span class="detail-val">${r.plan_expires_at?new Date(r.plan_expires_at).toLocaleDateString('en-BD',{day:'2-digit',month:'short',year:'numeric'}):'-'}</span></div>
+    <div class="detail-row"><span class="detail-key">City</span><span class="detail-val">${esc(r.city||'—')}</span></div>
+    <div class="detail-row"><span class="detail-key">WhatsApp</span><span class="detail-val">${esc(r.whatsapp||'—')}</span></div>
+    <div class="detail-row"><span class="detail-key">Joined</span><span class="detail-val">${new Date(r.created_at).toLocaleDateString('en-BD',{day:'2-digit',month:'short',year:'numeric'})}</span></div>
+    <div class="detail-row"><span class="detail-key">Total paid</span><span class="detail-val" style="color:var(--green)">৳${paidTotal.toLocaleString()}</span></div>
+    <div class="detail-row"><span class="detail-key">Payments</span><span class="detail-val">${payments.length} total</span></div>
+    ${r.slug?`<div class="detail-row"><span class="detail-key">Menu link</span><span class="detail-val" style="word-break:break-all;font-size:10px">?r=${r.slug}</span></div>`:''}
+
+    <div class="drawer-section">Change Plan</div>
+    <div class="plan-change-wrap">
+      <div class="plan-change-title">Manually set plan for this restaurant</div>
+      <select class="plan-select" id="drawer-plan-select">
+        <option value="trial" ${plan==='trial'?'selected':''}>Trial</option>
+        <option value="free" ${plan==='free'?'selected':''}>Free</option>
+        <option value="basic" ${plan==='basic'?'selected':''}>Basic — ৳599/mo</option>
+        <option value="pro" ${plan==='pro'?'selected':''}>Pro — ৳1199/mo</option>
+      </select>
+      <button class="plan-save-btn" onclick="savePlanFromDrawer('${restId}')">Save Plan Change →</button>
+    </div>
+
+    ${payments.length?`
+    <div class="drawer-section">Payment History</div>
+    ${payments.map(p=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <div>
+          <span class="mono" style="color:var(--pro)">${esc(p.trx_id||'—')}</span>
+          <span style="color:var(--text2);margin-left:8px;text-transform:capitalize">${p.method}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:700;font-family:var(--font-mono)">৳${p.amount}</span>
+          ${statusBadge(p.status)}
+        </div>
+      </div>`).join('')}
+    `:''}
+  `;
+
+  document.getElementById('drawer-overlay').classList.add('show');
+  document.getElementById('drawer').classList.add('show');
+}
+
+async function savePlanFromDrawer(restId){
+  const plan = document.getElementById('drawer-plan-select').value;
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate()+30);
+  const updates = {plan};
+  if(plan==='basic'||plan==='pro') updates.plan_expires_at = expiry.toISOString();
+
+  const {error} = await sb.from('restaurants').update(updates).eq('id',restId);
+  if(error){showToast(error.message,'red');return;}
+
+  const r = allRestaurants.find(x=>x.id===restId);
+  if(r){ r.plan=plan; if(updates.plan_expires_at) r.plan_expires_at=updates.plan_expires_at; }
+  renderStats(); renderRestaurantsTable();
+  showToast('Plan updated to '+plan.toUpperCase(),'green');
+  closeDrawer();
+}
+
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('show');
+  document.getElementById('drawer-overlay').classList.remove('show');
+}
+
+// ── HELPERS ──
+function planBadge(plan){
+  const map={trial:'trial',free:'free',basic:'basic',pro:'pro'};
+  const cls=map[plan]||'free';
+  const icon={trial:'⏳',free:'🌱',basic:'⚡',pro:'👑'}[plan]||'';
+  return `<span class="badge ${cls}">${icon} ${(plan||'trial').toUpperCase()}</span>`;
+}
+function statusBadge(status){
+  const icon={paid:'✓',pending:'⏳',failed:'✕',initiated:'→'}[status]||'?';
+  return `<span class="badge ${status}">${icon} ${status}</span>`;
+}
+function esc(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg,type='default'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show '+type;
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.className='toast',3500);
+}
+</script>
+</body>
+</html>
