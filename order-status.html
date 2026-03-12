@@ -244,7 +244,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Jo
         <div class="served-ring">🎉</div>
         <div class="served-title">Enjoy your meal!</div>
         <div class="served-sub">Your order has been served. We hope you loved the food!<br>Thank you for dining with us.</div>
-        <a href="#" id="order-again-btn" class="new-order-btn">Order Again →</a>
+        <a href="#" id="order-again-btn" class="new-order-btn">🔄 Order Again</a>
       </div>
     </div>
 
@@ -412,10 +412,17 @@ function render(order){
       document.querySelector('.served-title').style.color='#EF4444';
       document.querySelector('.served-sub').textContent='Your order was cancelled. Please speak to a staff member or place a new order.';
     }
-    // Order again link
+    // Order again — encode items for pre-fill
     const restSlugVal = order.restaurants?.slug || restSlug;
-    document.getElementById('order-again-btn').href =
-      `menu.html?r=${restSlugVal}${tableNum?'&t='+encodeURIComponent(tableNum):''}`;
+    const baseUrl = `menu.html?r=${restSlugVal}${tableNum?'&t='+encodeURIComponent(tableNum):''}`;
+    const reorderBtn = document.getElementById('order-again-btn');
+    reorderBtn.href = baseUrl;
+    // Encode item IDs+qty for reorder pre-fill
+    const reorderItems = (order.order_items||[]).map(i =>
+      `${i.menu_item_id}:${i.quantity}`).filter(Boolean).join(',');
+    if (reorderItems) {
+      reorderBtn.href = baseUrl + '&reorder=' + encodeURIComponent(reorderItems);
+    }
     // Stop polling
     if(pollInterval){ clearInterval(pollInterval); pollInterval=null; }
     if(realtimeSub){ sb.removeChannel(realtimeSub); realtimeSub=null; }
