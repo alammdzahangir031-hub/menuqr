@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MenuQR — Setup Your Restaurant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#2C742F;--green2:#1E5621;--green3:#3A9E3F;
+  --grad:linear-gradient(135deg,#2C742F,#3A9E3F);
+  --bg:#F7F8F5;--white:#fff;
+  --text:#1A1A1A;--text2:#4B5563;--muted:#9CA3AF;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.14);
+  --error:#DC2626;--success:#16A34A;
+  --shadow:0 2px 16px rgba(0,0,0,0.07);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.12);
+  --radius:16px;--pill:100px;
+}
+html,body{min-height:100%;font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── BG ── */
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.5}
+.bb1{width:500px;height:500px;background:radial-gradient(circle,rgba(44,116,47,0.12),transparent);top:-100px;right:-100px}
+.bb2{width:400px;height:400px;background:radial-gradient(circle,rgba(58,158,63,0.08),transparent);bottom:-80px;left:-80px}
+
+/* ── LAYOUT ── */
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:32px 16px 60px}
+
+/* ── LOGO ── */
+.onboard-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;text-decoration:none}
+.logo-icon{width:40px;height:40px;background:var(--grad);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff}
+.logo-text{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.02em}
+
+/* ── PROGRESS ── */
+.progress-wrap{width:100%;max-width:560px;margin-bottom:28px}
+.progress-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:12px}
+.prog-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative}
+.prog-step::after{content:'';position:absolute;top:16px;left:50%;width:100%;height:2px;background:var(--border2);z-index:0;transform:translateY(-50%)}
+.prog-step:last-child::after{display:none}
+.prog-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border2);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);position:relative;z-index:1;transition:all 0.3s}
+.prog-step.done .prog-dot{background:var(--green);border-color:var(--green);color:#fff}
+.prog-step.active .prog-dot{background:var(--white);border-color:var(--green);color:var(--green);box-shadow:0 0 0 4px rgba(44,116,47,0.12)}
+.prog-step.done::after{background:var(--green)}
+.prog-label{font-size:11px;font-weight:600;color:var(--muted);text-align:center;white-space:nowrap}
+.prog-step.active .prog-label{color:var(--green)}
+.prog-step.done .prog-label{color:var(--green2)}
+
+/* ── CARD ── */
+.onboard-card{width:100%;max-width:560px;background:var(--white);border-radius:20px;border:1px solid var(--border);padding:36px 32px;box-shadow:var(--shadow-lg);animation:slide-in 0.3s ease}
+@keyframes slide-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.step-icon{font-size:52px;margin-bottom:16px;display:block;text-align:center}
+.step-title{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-0.02em;margin-bottom:8px;text-align:center}
+.step-sub{font-size:15px;color:var(--text2);line-height:1.7;text-align:center;margin-bottom:28px;max-width:420px;margin-left:auto;margin-right:auto}
+
+/* ── FORM ── */
+.form{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px}
+.field-hint{font-size:12px;color:var(--muted);margin-top:2px}
+.field-error{font-size:12px;color:var(--error);display:none;margin-top:2px}
+.field-error.show{display:block}
+.input{width:100%;border:1.5px solid var(--border2);border-radius:12px;padding:12px 14px;font-size:15px;color:var(--text);font-family:'Jost',sans-serif;outline:none;transition:border-color 0.2s,box-shadow 0.2s;background:var(--white)}
+.input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(44,116,47,0.1)}
+.input.error{border-color:var(--error)}
+.input::placeholder{color:var(--muted)}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+textarea.input{resize:none;min-height:80px;line-height:1.6}
+select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239CA3AF' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+
+/* Phone input with flag */
+.phone-wrap{position:relative}
+.phone-flag{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none}
+.phone-wrap .input{padding-left:42px}
+
+/* Color picker */
+.color-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.color-opt{width:36px;height:36px;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:all 0.15s;position:relative}
+.color-opt.selected{border-color:var(--text);transform:scale(1.1)}
+.color-opt.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff}
+
+/* Category chips */
+.cat-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.cat-chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--pill);border:1.5px solid var(--border2);background:var(--white);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;user-select:none}
+.cat-chip.selected{background:rgba(44,116,47,0.1);border-color:var(--green);color:var(--green)}
+.cat-chip:hover:not(.selected){border-color:var(--green3)}
+
+/* Table count buttons */
+.table-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.table-btn{padding:8px 20px;border-radius:var(--pill);border:1.5px solid var(--border2);background:var(--white);font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:'Jost',sans-serif}
+.table-btn.selected{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(44,116,47,0.25)}
+.table-btn:hover:not(.selected){border-color:var(--green)}
+
+/* Preview card */
+.preview-card{background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-top:8px}
+.preview-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.preview-rest-name{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px}
+.preview-url{font-size:12px;color:var(--green);font-family:monospace}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:10px;margin-top:8px}
+.btn-back{flex:1;padding:13px;border-radius:var(--pill);background:var(--white);border:1.5px solid var(--border2);font-size:15px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;color:var(--text2);transition:all 0.15s}
+.btn-back:hover{border-color:var(--text2)}
+.btn-next{flex:2;padding:13px;border-radius:var(--pill);background:var(--grad);border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;box-shadow:0 4px 16px rgba(44,116,47,0.3);transition:all 0.2s;position:relative;overflow:hidden}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(44,116,47,0.4)}
+.btn-next:disabled{opacity:0.65;cursor:not-allowed;transform:none}
+.btn-next .spinner{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-full{width:100%;padding:15px;border-radius:var(--pill);background:var(--grad);border:none;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;box-shadow:0 4px 16px rgba(44,116,47,0.3);transition:all 0.2s}
+.btn-full:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(44,116,47,0.4)}
+
+/* ── SUCCESS SCREEN ── */
+#step-done{display:none}
+#step-done.active{display:block}
+.done-icon{font-size:80px;display:block;text-align:center;margin-bottom:20px;animation:pop 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.done-checklist{display:flex;flex-direction:column;gap:10px;margin:24px 0}
+.done-check{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(44,116,47,0.06);border:1px solid rgba(44,116,47,0.15);border-radius:12px;font-size:14px;font-weight:500}
+.done-check-icon{font-size:20px}
+
+/* ── SKIP LINK ── */
+.skip-link{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+.skip-link a{color:var(--green);font-weight:600;cursor:pointer;text-decoration:none}
+.skip-link a:hover{text-decoration:underline}
+
+/* ── MOBILE ── */
+@media(max-width:600px){
+  .onboard-card{padding:24px 18px}
+  .input-row{grid-template-columns:1fr}
+  .step-title{font-size:20px}
+  .prog-label{display:none}
+}
+</style>
+</head>
+<body>
+<div class="bg-blobs"><div class="bg-blob bb1"></div><div class="bg-blob bb2"></div></div>
+
+<div class="page">
+
+  <!-- Logo -->
+  <a href="index.html" class="onboard-logo">
+    <div class="logo-icon" style="background:none;padding:0;overflow:hidden;display:flex"><img src="menuqr-logo.svg" alt="MenuQR" style="width:40px;height:40px;border-radius:11px;object-fit:cover;flex-shrink:0"></div>
+    <span class="logo-text">MenuQR</span>
+  </a>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-steps" id="progress-steps">
+      <div class="prog-step active" id="prog-1">
+        <div class="prog-dot">1</div>
+        <div class="prog-label">Restaurant</div>
+      </div>
+      <div class="prog-step" id="prog-2">
+        <div class="prog-dot">2</div>
+        <div class="prog-label">Menu Setup</div>
+      </div>
+      <div class="prog-step" id="prog-3">
+        <div class="prog-dot">3</div>
+        <div class="prog-label">Tables</div>
+      </div>
+      <div class="prog-step" id="prog-4">
+        <div class="prog-dot">4</div>
+        <div class="prog-label">Go Live</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CARD ══ -->
+  <div class="onboard-card" id="onboard-card">
+
+    <!-- STEP 1: Restaurant Info -->
+    <div id="step-1">
+      <span class="step-icon">🏪</span>
+      <div class="step-title">Tell us about your restaurant</div>
+      <div class="step-sub">This takes 2 minutes. We'll set everything up for you.</div>
+      <div class="form">
+        <div class="field">
+          <label>Restaurant Name *</label>
+          <input class="input" id="s1-name" placeholder="e.g. Bismillah Hotel" maxlength="60">
+          <span class="field-error" id="s1-name-err">Please enter your restaurant name.</span>
+        </div>
+        <div class="input-row">
+          <div class="field">
+            <label>City *</label>
+            <select class="input" id="s1-city">
+              <option value="">Select city</option>
+              <option value="Dhaka">Dhaka</option>
+              <option value="Chittagong">Chittagong</option>
+              <option value="Sylhet">Sylhet</option>
+              <option value="Rajshahi">Rajshahi</option>
+              <option value="Khulna">Khulna</option>
+              <option value="Comilla">Comilla</option>
+              <option value="Mymensingh">Mymensingh</option>
+              <option value="Barishal">Barishal</option>
+              <option value="Rangpur">Rangpur</option>
+              <option value="Other">Other</option>
+            </select>
+            <span class="field-error" id="s1-city-err">Please select your city.</span>
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select class="input" id="s1-type">
+              <option value="restaurant">Restaurant</option>
+              <option value="cafe">Café / Coffee Shop</option>
+              <option value="fastfood">Fast Food</option>
+              <option value="biryani">Biryani House</option>
+              <option value="sweets">Sweets & Desserts</option>
+              <option value="hotel">Hotel Restaurant</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Kitchen WhatsApp Number *</label>
+          <div class="phone-wrap">
+            <span class="phone-flag">🇧🇩</span>
+            <input class="input" id="s1-whatsapp" placeholder="01XXXXXXXXX" type="tel" maxlength="14">
+          </div>
+          <div class="field-hint">Orders will be sent to this number via WhatsApp.</div>
+          <span class="field-error" id="s1-wa-err">Enter a valid BD number (01XXXXXXXXX).</span>
+        </div>
+        <div class="field">
+          <label>Short Description <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <textarea class="input" id="s1-desc" placeholder="e.g. Authentic Bengali cuisine since 1998. Best biryani in Dhaka!" rows="2" maxlength="200"></textarea>
+        </div>
+
+        <!-- Live preview -->
+        <div class="preview-card">
+          <div class="preview-label">Your menu URL will be</div>
+          <div class="preview-rest-name" id="preview-name">Your Restaurant</div>
+          <div class="preview-url" id="preview-url">menuqr.app/menu/your-restaurant</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-next" onclick="goStep(2)">
+            <span id="s1-btn-text">Continue →</span>
+            <div class="spinner" id="s1-spinner"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Menu Categories -->
+    <div id="step-2" style="display:none">
+      <span class="step-icon">🍽️</span>
+      <div class="step-title">What do you serve?</div>
+      <div class="step-sub">Select your menu categories. You can add more later.</div>
+      <div class="form">
+        <div class="field">
+          <label>Menu Categories</label>
+          <div class="cat-chips" id="cat-chips">
+            <div class="cat-chip selected" data-cat="Rice" data-emoji="🍛" onclick="toggleCat(this)">🍛 Rice</div>
+            <div class="cat-chip" data-cat="Bread" data-emoji="🫓" onclick="toggleCat(this)">🫓 Roti / Bread</div>
+            <div class="cat-chip selected" data-cat="Chicken" data-emoji="🍗" onclick="toggleCat(this)">🍗 Chicken</div>
+            <div class="cat-chip" data-cat="Beef" data-emoji="🥩" onclick="toggleCat(this)">🥩 Beef</div>
+            <div class="cat-chip" data-cat="Mutton" data-emoji="🍲" onclick="toggleCat(this)">🍲 Mutton</div>
+            <div class="cat-chip" data-cat="Fish" data-emoji="🐟" onclick="toggleCat(this)">🐟 Fish</div>
+            <div class="cat-chip" data-cat="Vegetables" data-emoji="🥗" onclick="toggleCat(this)">🥗 Vegetables</div>
+            <div class="cat-chip selected" data-cat="Drinks" data-emoji="🥤" onclick="toggleCat(this)">🥤 Drinks</div>
+            <div class="cat-chip" data-cat="Desserts" data-emoji="🍮" onclick="toggleCat(this)">🍮 Desserts</div>
+            <div class="cat-chip" data-cat="Snacks" data-emoji="🥟" onclick="toggleCat(this)">🥟 Snacks</div>
+            <div class="cat-chip" data-cat="Breakfast" data-emoji="🍳" onclick="toggleCat(this)">🍳 Breakfast</div>
+            <div class="cat-chip" data-cat="Iftar" data-emoji="🌙" onclick="toggleCat(this)">🌙 Iftar Special</div>
+          </div>
+          <div class="field-hint" style="margin-top:8px">Selected categories will appear in your customer menu.</div>
+        </div>
+
+        <div class="field">
+          <label>Brand Color</label>
+          <div class="color-options" id="color-options">
+            <div class="color-opt selected" data-color="#2C742F" style="background:#2C742F" onclick="selectColor(this)" title="Forest Green"></div>
+            <div class="color-opt" data-color="#1E3A5F" style="background:#1E3A5F" onclick="selectColor(this)" title="Deep Blue"></div>
+            <div class="color-opt" data-color="#7C3AED" style="background:#7C3AED" onclick="selectColor(this)" title="Purple"></div>
+            <div class="color-opt" data-color="#DC2626" style="background:#DC2626" onclick="selectColor(this)" title="Red"></div>
+            <div class="color-opt" data-color="#D97706" style="background:#D97706" onclick="selectColor(this)" title="Amber"></div>
+            <div class="color-opt" data-color="#0F766E" style="background:#0F766E" onclick="selectColor(this)" title="Teal"></div>
+            <div class="color-opt" data-color="#1A1A1A" style="background:#1A1A1A" onclick="selectColor(this)" title="Black"></div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-back" onclick="goStep(1)">← Back</button>
+          <button class="btn-next" onclick="goStep(3)">Continue →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Tables -->
+    <div id="step-3" style="display:none">
+      <span class="step-icon">🪑</span>
+      <div class="step-title">How many tables do you have?</div>
+      <div class="step-sub">We'll generate a QR code for each table automatically.</div>
+      <div class="form">
+        <div class="field">
+          <label>Number of Tables</label>
+          <div class="table-btns" id="table-btns">
+            <button class="table-btn" onclick="selectTables(5,this)">5</button>
+            <button class="table-btn selected" onclick="selectTables(10,this)">10</button>
+            <button class="table-btn" onclick="selectTables(15,this)">15</button>
+            <button class="table-btn" onclick="selectTables(20,this)">20</button>
+            <button class="table-btn" onclick="selectTables(30,this)">30</button>
+            <button class="table-btn" onclick="selectTables(50,this)">50</button>
+          </div>
+          <div class="field-hint" style="margin-top:10px">Or enter a custom number:</div>
+          <input class="input" id="s3-custom-tables" type="number" placeholder="Custom number e.g. 25" min="1" max="200" style="margin-top:6px">
+        </div>
+
+        <div class="field">
+          <label>Numbering Style</label>
+          <select class="input" id="s3-numbering">
+            <option value="numeric">Numeric — 1, 2, 3...</option>
+            <option value="alpha">Alphanumeric — A1, A2, B1, B2...</option>
+            <option value="vip">VIP Style — Table 1, VIP-1...</option>
+          </select>
+        </div>
+
+        <div class="preview-card" id="tables-preview">
+          <div class="preview-label">QR codes will be generated for</div>
+          <div id="tables-preview-text" style="font-size:15px;font-weight:600;color:var(--text)">Tables 1 – 10</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Each table gets a unique scannable QR code</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-back" onclick="goStep(2)">← Back</button>
+          <button class="btn-next" id="s3-btn" onclick="goStep(4)">
+            <span id="s3-btn-text">Generate QR Codes →</span>
+            <div class="spinner" id="s3-spinner"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Saving + Go Live -->
+    <div id="step-4" style="display:none">
+      <span class="step-icon">🚀</span>
+      <div class="step-title">You're almost live!</div>
+      <div class="step-sub">We're setting up your restaurant now. This takes a few seconds.</div>
+
+      <div id="setup-progress" style="display:flex;flex-direction:column;gap:10px;margin:20px 0">
+        <div class="done-check" id="check-rest">
+          <span class="done-check-icon" id="chk-rest-icon">⏳</span>
+          <span>Creating your restaurant profile</span>
+        </div>
+        <div class="done-check" id="check-cats">
+          <span class="done-check-icon" id="chk-cats-icon">⏳</span>
+          <span>Setting up menu categories</span>
+        </div>
+        <div class="done-check" id="check-tables">
+          <span class="done-check-icon" id="chk-tables-icon">⏳</span>
+          <span>Generating QR codes for <span id="chk-tables-count">10</span> tables</span>
+        </div>
+        <div class="done-check" id="check-done" style="opacity:0.4">
+          <span class="done-check-icon" id="chk-done-icon">⏳</span>
+          <span>Your menu is live and ready!</span>
+        </div>
+      </div>
+
+      <div id="setup-error" style="display:none;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:12px;padding:14px;color:var(--error);font-size:14px;margin-bottom:16px"></div>
+
+      <button class="btn-full" id="go-dashboard-btn" style="display:none" onclick="window.location.href='dashboard.html'">
+        Go to My Dashboard →
+      </button>
+    </div>
+
+  </div><!-- /card -->
+
+  <div class="skip-link">
+    <a onclick="skipOnboarding()">Skip setup — I'll do this later</a>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ══ SUPABASE ══
+const { createClient } = supabase;
+const sb = createClient(
+  'https://jkskdvvisfmezcqvamfy.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imprc2tkdnZpc2ZtZXpjcXZhbWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2OTYzNzMsImV4cCI6MjA4ODI3MjM3M30.AxQwKmgaMdRcGyVXDPkZwnjTTqWk9nku0EvCpE37Ve4'
+);
+
+// ══ STATE ══
+let currentStep = 1;
+let selectedTableCount = 10;
+let selectedColor = '#2C742F';
+let currentUser = null;
+let restaurantId = null;
+
+// ══ AUTH GUARD ══
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'auth.html'; return; }
+  currentUser = session.user;
+
+  // Check if already onboarded — has a restaurant with categories
+  const { data: rest } = await sb.from('restaurants').select('id,name').eq('owner_id', currentUser.id).maybeSingle();
+  if (rest) {
+    const { data: cats } = await sb.from('categories').select('id').eq('restaurant_id', rest.id).limit(1);
+    if (cats && cats.length > 0) {
+      // Already set up — go to dashboard
+      window.location.href = 'dashboard.html';
+      return;
+    }
+    // Has restaurant but no categories — pre-fill name
+    restaurantId = rest.id;
+    document.getElementById('s1-name').value = rest.name.replace("'s Restaurant", '') || '';
+    updatePreview();
+  }
+
+  // Pre-fill from auth metadata
+  const meta = session.user.user_metadata || {};
+  if (meta.phone) document.getElementById('s1-whatsapp').value = meta.phone;
+})();
+
+// ══ STEP NAVIGATION ══
+function goStep(n) {
+  if (n > currentStep) {
+    if (!validateStep(currentStep)) return;
+  }
+
+  if (n === 4) {
+    runSetup();
+    return;
+  }
+
+  document.getElementById(`step-${currentStep}`).style.display = 'none';
+  document.getElementById(`step-${n}`).style.display = 'block';
+
+  // Update progress dots
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById(`prog-${i}`);
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══ VALIDATION ══
+function validateStep(step) {
+  if (step === 1) {
+    const name = document.getElementById('s1-name').value.trim();
+    const city = document.getElementById('s1-city').value;
+    const wa   = document.getElementById('s1-whatsapp').value.trim();
+    let valid = true;
+
+    document.getElementById('s1-name-err').classList.remove('show');
+    document.getElementById('s1-city-err').classList.remove('show');
+    document.getElementById('s1-wa-err').classList.remove('show');
+
+    if (!name) { document.getElementById('s1-name-err').classList.add('show'); valid = false; }
+    if (!city) { document.getElementById('s1-city-err').classList.add('show'); valid = false; }
+    if (wa && !/^01[3-9]\d{8}$/.test(wa.replace(/\s/g,''))) {
+      document.getElementById('s1-wa-err').classList.add('show'); valid = false;
+    }
+    return valid;
+  }
+  return true;
+}
+
+// ══ LIVE PREVIEW ══
+document.getElementById('s1-name').addEventListener('input', updatePreview);
+function updatePreview() {
+  const name = document.getElementById('s1-name').value.trim() || 'Your Restaurant';
+  document.getElementById('preview-name').textContent = name;
+  const slug = name.toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,'-').substring(0,30);
+  document.getElementById('preview-url').textContent = `menuqr.app/menu/${slug || 'your-restaurant'}`;
+}
+
+// ══ CATEGORY TOGGLE ══
+function toggleCat(el) {
+  el.classList.toggle('selected');
+}
+
+// ══ COLOR PICKER ══
+function selectColor(el) {
+  document.querySelectorAll('.color-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedColor = el.dataset.color;
+}
+
+// ══ TABLE COUNT ══
+function selectTables(n, btn) {
+  selectedTableCount = n;
+  document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('s3-custom-tables').value = '';
+  updateTablesPreview();
+}
+
+document.getElementById('s3-custom-tables').addEventListener('input', (e) => {
+  const n = parseInt(e.target.value);
+  if (n > 0) {
+    selectedTableCount = n;
+    document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('selected'));
+    updateTablesPreview();
+  }
+});
+
+function updateTablesPreview() {
+  const style = document.getElementById('s3-numbering').value;
+  let preview = '';
+  if (style === 'alpha') {
+    preview = `Tables A1–A${Math.min(selectedTableCount,5)}, B1...`;
+  } else {
+    preview = `Tables 1 – ${selectedTableCount}`;
+  }
+  document.getElementById('tables-preview-text').textContent = preview;
+  document.getElementById('chk-tables-count').textContent = selectedTableCount;
+}
+document.getElementById('s3-numbering').addEventListener('change', updateTablesPreview);
+
+// ══ GENERATE TABLE NUMBERS ══
+function generateTableNumbers(count, style) {
+  const tables = [];
+  if (style === 'alpha') {
+    const letters = 'ABCDEFGHIJ';
+    let i = 0;
+    outer: for (const letter of letters) {
+      for (let n = 1; n <= 10; n++) {
+        tables.push(`${letter}${n}`);
+        i++;
+        if (i >= count) break outer;
+      }
+    }
+  } else {
+    for (let i = 1; i <= count; i++) tables.push(String(i));
+  }
+  return tables;
+}
+
+// ══ SLUG GENERATOR ══
+function generateSlug(name) {
+  return name.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .substring(0, 30)
+    + '-' + Math.random().toString(36).substring(2, 6);
+}
+
+// ══ SETUP RUNNER ══
+async function runSetup() {
+  document.getElementById(`step-${currentStep}`).style.display = 'none';
+  document.getElementById('step-4').style.display = 'block';
+  currentStep = 4;
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById(`prog-${i}`).classList.remove('active','done');
+    if (i < 4) document.getElementById(`prog-${i}`).classList.add('done');
+    else document.getElementById(`prog-${i}`).classList.add('active');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const name     = document.getElementById('s1-name').value.trim();
+  const city     = document.getElementById('s1-city').value;
+  const whatsapp = document.getElementById('s1-whatsapp').value.trim();
+  const desc     = document.getElementById('s1-desc').value.trim();
+  const tableStyle = document.getElementById('s3-numbering').value;
+
+  const selectedCats = [...document.querySelectorAll('.cat-chip.selected')].map(el => ({
+    name: el.dataset.cat, emoji: el.dataset.emoji
+  }));
+
+  try {
+    // ── STEP 1: Create/update restaurant ──
+    setCheck('rest', 'loading');
+    await delay(400);
+
+    // Generate unique slug
+    let slug = generateSlug(name);
+    const { data: existing } = await sb.from('restaurants').select('id').eq('slug', slug).maybeSingle();
+    if (existing) slug = generateSlug(name); // regenerate if collision
+    let restData;
+
+    if (restaurantId) {
+      const { data, error } = await sb.from('restaurants').update({
+        name, city, whatsapp, description: desc || null, slug,
+      }).eq('id', restaurantId).select().single();
+      if (error) throw error;
+      restData = data;
+    } else {
+      const { data, error } = await sb.from('restaurants').insert({
+        owner_id: currentUser.id,
+        name, city, whatsapp, description: desc || null, slug,
+      }).select().single();
+      if (error) throw error;
+      restData = data;
+    }
+    restaurantId = restData.id;
+    setCheck('rest', 'done');
+
+    // ── STEP 2: Create categories ──
+    setCheck('cats', 'loading');
+    await delay(300);
+
+    if (selectedCats.length > 0) {
+      const catRows = selectedCats.map((c, i) => ({
+        restaurant_id: restaurantId,
+        name: c.name,
+        emoji: c.emoji,
+        sort_order: i,
+      }));
+      const { error: catErr } = await sb.from('categories').insert(catRows);
+      if (catErr) throw catErr;
+    }
+    setCheck('cats', 'done');
+
+    // ── STEP 3: Generate tables ──
+    setCheck('tables', 'loading');
+    await delay(400);
+
+    const tableNumbers = generateTableNumbers(selectedTableCount, tableStyle);
+    const tableRows = tableNumbers.map(num => ({
+      restaurant_id: restaurantId,
+      table_number: num,
+    }));
+
+    // Insert in batches of 50
+    for (let i = 0; i < tableRows.length; i += 50) {
+      const batch = tableRows.slice(i, i + 50);
+      const { error: tErr } = await sb.from('restaurant_tables').insert(batch);
+      if (tErr) throw tErr;
+    }
+    setCheck('tables', 'done');
+
+    // ── STEP 4: Done ──
+    await delay(500);
+    setCheck('done', 'done');
+    document.getElementById('check-done').style.opacity = '1';
+
+    await delay(600);
+    document.getElementById('go-dashboard-btn').style.display = 'block';
+
+    // Auto-redirect after 2 seconds
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+
+  } catch (err) {
+    console.error('Setup error:', err);
+    const errEl = document.getElementById('setup-error');
+    errEl.style.display = 'block';
+    errEl.textContent = '⚠️ Setup failed: ' + err.message + '. Please try again or skip and set up from dashboard.';
+    document.getElementById('go-dashboard-btn').style.display = 'block';
+    document.getElementById('go-dashboard-btn').textContent = 'Skip to Dashboard →';
+  }
+}
+
+// ══ HELPERS ══
+function setCheck(key, state) {
+  const icon = document.getElementById(`chk-${key}-icon`);
+  if (state === 'loading') icon.textContent = '🔄';
+  else if (state === 'done') icon.textContent = '✅';
+  else if (state === 'error') icon.textContent = '❌';
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function skipOnboarding() {
+  window.location.href = 'dashboard.html';
+}
+</script>
+</body>
+</html>
