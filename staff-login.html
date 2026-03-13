@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Staff Login — MenuQR</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;600;700;800;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#2C742F;--green2:#1E5621;--green3:#3A9E3F;
+  --grad:linear-gradient(135deg,#2C742F,#3A9E3F);
+  --orange:#E8620A;--orange-grad:linear-gradient(135deg,#E8620A,#C95010);
+  --blue:#3B82F6;
+  --bg:#F0F4F0;--white:#fff;
+  --text:#1A1A1A;--text2:#4B5563;--muted:#9CA3AF;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.08);
+  --shadow:0 8px 32px rgba(0,0,0,0.12);
+  --radius:18px;
+}
+html,body{height:100%;font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── BG ── */
+.bg-wrap{position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 70% 60% at 20% 0%,rgba(44,116,47,0.1),transparent),
+             radial-gradient(ellipse 60% 50% at 80% 100%,rgba(232,98,10,0.07),transparent),
+             #F0F4F0;
+}
+
+/* ── WRAP ── */
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px}
+
+/* ── HEADER ── */
+.header{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:28px;margin-top:16px}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-wrap img{width:44px;height:44px;border-radius:13px;object-fit:cover;box-shadow:0 4px 16px rgba(44,116,47,0.3)}
+.logo-text{font-size:22px;font-weight:900;letter-spacing:-0.02em}
+.logo-text span{color:var(--green)}
+.header-sub{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+.restaurant-name{font-size:18px;font-weight:800;color:var(--text);text-align:center;max-width:280px}
+
+/* ── STEP WRAPPER ── */
+.step{width:100%;max-width:400px;display:none}
+.step.active{display:block}
+
+/* ── STAFF GRID ── */
+.staff-title{font-size:15px;font-weight:700;color:var(--text2);text-align:center;margin-bottom:16px}
+.staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.staff-card{background:var(--white);border:2px solid var(--border2);border-radius:16px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .18s;box-shadow:0 2px 10px rgba(0,0,0,0.06)}
+.staff-card:hover,.staff-card:active{border-color:var(--green);background:rgba(44,116,47,0.04);transform:translateY(-2px);box-shadow:0 6px 20px rgba(44,116,47,0.15)}
+.staff-avatar{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900}
+.role-waiter .staff-avatar{background:rgba(59,130,246,0.12)}
+.role-kitchen .staff-avatar{background:rgba(249,115,22,0.12)}
+.role-cashier .staff-avatar{background:rgba(168,85,247,0.12)}
+.staff-card-name{font-size:14px;font-weight:800;color:var(--text);text-align:center}
+.staff-card-role{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;text-align:center}
+.role-waiter .staff-card-role{color:#3B82F6}
+.role-kitchen .staff-card-role{color:#F97316}
+.role-cashier .staff-card-role{color:#A855F7}
+
+/* ── PIN PAD ── */
+.pin-back{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--green);cursor:pointer;margin-bottom:20px;width:fit-content}
+.pin-back:hover{opacity:.75}
+.pin-card{background:var(--white);border-radius:var(--radius);padding:28px 24px;box-shadow:var(--shadow)}
+.pin-who{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border2)}
+.pin-who-avatar{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.pin-who-name{font-size:18px;font-weight:800;color:var(--text)}
+.pin-who-role{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+.pin-label{font-size:14px;font-weight:700;color:var(--text2);text-align:center;margin-bottom:14px}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:24px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2.5px solid #D1D5DB;transition:all .15s}
+.pin-dot.filled{background:var(--green);border-color:var(--green)}
+.pin-dot.error{background:var(--error,#DC2626);border-color:var(--error,#DC2626);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ── NUMBER PAD ── */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.num-btn{height:64px;border-radius:14px;border:2px solid var(--border2);background:var(--white);font-size:24px;font-weight:700;color:var(--text);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;font-family:'Jost',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.num-btn:hover,.num-btn:active{background:#F0FDF0;border-color:var(--green);transform:scale(0.97)}
+.num-btn.del{background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.2);color:#DC2626}
+.num-btn.enter{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(44,116,47,0.3)}
+.num-btn.enter:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── ERROR MSG ── */
+.pin-error{text-align:center;font-size:13px;font-weight:700;color:#DC2626;margin-top:12px;min-height:20px}
+
+/* ── LOADING ── */
+.login-loading{text-align:center;padding:40px 20px}
+.login-loading .spin{font-size:36px;animation:spinit 1s linear infinite;display:inline-block;margin-bottom:12px}
+@keyframes spinit{to{transform:rotate(360deg)}}
+.login-loading p{font-size:15px;font-weight:600;color:var(--text2)}
+
+/* ── NO STAFF ── */
+.empty-state{text-align:center;padding:40px 24px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow)}
+.empty-state .emoji{font-size:48px;margin-bottom:14px}
+.empty-state h3{font-size:18px;font-weight:800;margin-bottom:8px}
+.empty-state p{font-size:14px;color:var(--text2);line-height:1.6}
+
+@media(max-width:380px){
+  .staff-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .staff-card{padding:16px 12px}
+  .staff-avatar{width:44px;height:44px;font-size:22px}
+  .num-btn{height:56px;font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="bg-wrap"></div>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-wrap">
+      <img src="menuqr-logo.svg" alt="MenuQR">
+      <div class="logo-text">Menu<span>QR</span></div>
+    </div>
+    <div class="header-sub">Staff Login</div>
+    <div class="restaurant-name" id="rest-name">Loading...</div>
+  </div>
+
+  <!-- STEP 1: Pick staff member -->
+  <div class="step active" id="step-pick">
+    <div class="staff-title">আপনি কে? নাম বেছে নিন 👇</div>
+    <div class="staff-grid" id="staff-grid">
+      <div class="login-loading" style="grid-column:1/-1">
+        <div class="spin">⏳</div>
+        <p>লোড হচ্ছে...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Enter PIN -->
+  <div class="step" id="step-pin">
+    <div class="pin-back" onclick="goBack()">← পিছনে যান</div>
+    <div class="pin-card">
+      <div class="pin-who" id="pin-who">
+        <div class="pin-who-avatar" id="pin-avatar">🙋</div>
+        <div>
+          <div class="pin-who-name" id="pin-name">Name</div>
+          <div class="pin-who-role" id="pin-role">Role</div>
+        </div>
+      </div>
+      <div class="pin-label">🔐 আপনার ৪ সংখ্যার PIN দিন</div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="d0"></div>
+        <div class="pin-dot" id="d1"></div>
+        <div class="pin-dot" id="d2"></div>
+        <div class="pin-dot" id="d3"></div>
+      </div>
+      <div class="numpad">
+        <button class="num-btn" onclick="numPress('1')">1</button>
+        <button class="num-btn" onclick="numPress('2')">2</button>
+        <button class="num-btn" onclick="numPress('3')">3</button>
+        <button class="num-btn" onclick="numPress('4')">4</button>
+        <button class="num-btn" onclick="numPress('5')">5</button>
+        <button class="num-btn" onclick="numPress('6')">6</button>
+        <button class="num-btn" onclick="numPress('7')">7</button>
+        <button class="num-btn" onclick="numPress('8')">8</button>
+        <button class="num-btn" onclick="numPress('9')">9</button>
+        <button class="num-btn del" onclick="numDel()">⌫</button>
+        <button class="num-btn" onclick="numPress('0')">0</button>
+        <button class="num-btn enter" id="enter-btn" onclick="checkPin()" disabled>✓</button>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPA_URL = 'https://jkskdvvisfmezcqvamfy.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imprc2tkdnZpc2ZtZXpjcXZhbWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2OTYzNzMsImV4cCI6MjA4ODI3MjM3M30.AxQwKmgaMdRcGyVXDPkZwnjTTqWk9nku0EvCpE37Ve4';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const ROLE_EMOJI  = { waiter:'🙋', kitchen:'👨‍🍳', cashier:'💰' };
+const ROLE_LABEL  = { waiter:'Waiter', kitchen:'Kitchen Staff', cashier:'Cashier' };
+const ROLE_COLOR  = { waiter:'rgba(59,130,246,0.12)', kitchen:'rgba(249,115,22,0.12)', cashier:'rgba(168,85,247,0.12)' };
+
+let staffList = [];
+let selectedStaff = null;
+let enteredPin = '';
+let restaurantSlug = '';
+let restaurantId = '';
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  restaurantSlug = params.get('r') || '';
+  if (!restaurantSlug) {
+    showEmpty('URL সমস্যা', 'লিংকে ?r=slug থাকা দরকার। ড্যাশবোর্ড থেকে সঠিক লিংক কপি করুন।');
+    return;
+  }
+  await loadRestaurant();
+});
+
+async function loadRestaurant() {
+  const { data } = await sb.from('restaurants').select('id,name').eq('slug', restaurantSlug).maybeSingle();
+  if (!data) {
+    showEmpty('রেস্টুরেন্ট পাওয়া যায়নি', 'লিংক ভুল হতে পারে। ড্যাশবোর্ড থেকে নতুন লিংক কপি করুন।');
+    return;
+  }
+  restaurantId = data.id;
+  document.getElementById('rest-name').textContent = data.name;
+  await loadStaffList();
+}
+
+async function loadStaffList() {
+  const { data } = await sb.from('restaurant_staff')
+    .select('id,name,role')
+    .eq('restaurant_id', restaurantId)
+    .eq('is_active', true)
+    .order('created_at');
+
+  staffList = data || [];
+  renderStaffGrid();
+}
+
+function renderStaffGrid() {
+  const grid = document.getElementById('staff-grid');
+  if (!staffList.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="emoji">👥</div>
+        <h3>কোনো স্টাফ নেই</h3>
+        <p>ড্যাশবোর্ড → Staff ট্যাব থেকে স্টাফ যোগ করুন</p>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = staffList.map(s => `
+    <div class="staff-card role-${s.role}" onclick="selectStaff('${s.id}')">
+      <div class="staff-avatar" style="background:${ROLE_COLOR[s.role]||'rgba(0,0,0,0.06)'}">
+        ${ROLE_EMOJI[s.role]||'👤'}
+      </div>
+      <div class="staff-card-name">${s.name}</div>
+      <div class="staff-card-role">${ROLE_LABEL[s.role]||s.role}</div>
+    </div>
+  `).join('');
+}
+
+function selectStaff(id) {
+  selectedStaff = staffList.find(s => s.id === id);
+  if (!selectedStaff) return;
+
+  // Populate PIN step
+  document.getElementById('pin-avatar').textContent = ROLE_EMOJI[selectedStaff.role]||'👤';
+  document.getElementById('pin-avatar').style.background = ROLE_COLOR[selectedStaff.role]||'rgba(0,0,0,0.06)';
+  document.getElementById('pin-name').textContent = selectedStaff.name;
+  document.getElementById('pin-role').textContent = ROLE_LABEL[selectedStaff.role]||selectedStaff.role;
+
+  enteredPin = '';
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+
+  showStep('step-pin');
+}
+
+/* ── PIN PAD LOGIC ── */
+function numPress(n) {
+  if (enteredPin.length >= 4) return;
+  enteredPin += n;
+  updateDots();
+  document.getElementById('enter-btn').disabled = enteredPin.length < 4;
+  if (enteredPin.length === 4) checkPin();
+}
+
+function numDel() {
+  enteredPin = enteredPin.slice(0, -1);
+  updateDots();
+  document.getElementById('enter-btn').disabled = true;
+  document.getElementById('pin-error').textContent = '';
+  clearError();
+}
+
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('d'+i);
+    d.classList.toggle('filled', i < enteredPin.length);
+    d.classList.remove('error');
+  }
+}
+
+async function checkPin() {
+  if (!selectedStaff) return;
+
+  // Fetch full staff record (including PIN) securely — anon can read
+  const { data } = await sb.from('restaurant_staff')
+    .select('pin,role')
+    .eq('id', selectedStaff.id)
+    .maybeSingle();
+
+  if (!data) { showPinError('সমস্যা হয়েছে, আবার চেষ্টা করুন'); return; }
+
+  if (enteredPin !== data.pin) {
+    showPinError('❌ ভুল PIN! আবার চেষ্টা করুন');
+    enteredPin = '';
+    updateDots();
+    document.getElementById('enter-btn').disabled = true;
+    // Shake animation
+    for (let i = 0; i < 4; i++) document.getElementById('d'+i).classList.add('error');
+    setTimeout(() => { for (let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('error'); }, 600);
+    return;
+  }
+
+  // ✅ PIN correct — redirect based on role
+  const role = data.role;
+  // Store session in sessionStorage so waiter page knows who is logged in
+  sessionStorage.setItem('staff_name', selectedStaff.name);
+  sessionStorage.setItem('staff_role', role);
+  sessionStorage.setItem('staff_restaurant', restaurantSlug);
+
+  if (role === 'kitchen') {
+    window.location.href = `kitchen.html?r=${restaurantSlug}`;
+  } else if (role === 'waiter') {
+    window.location.href = `waiter.html?r=${restaurantSlug}&name=${encodeURIComponent(selectedStaff.name)}`;
+  } else if (role === 'cashier') {
+    window.location.href = `waiter.html?r=${restaurantSlug}&name=${encodeURIComponent(selectedStaff.name)}&mode=cashier`;
+  } else {
+    window.location.href = `waiter.html?r=${restaurantSlug}&name=${encodeURIComponent(selectedStaff.name)}`;
+  }
+}
+
+function showPinError(msg) {
+  document.getElementById('pin-error').textContent = msg;
+}
+function clearError() {
+  document.getElementById('pin-error').textContent = '';
+}
+
+/* ── STEP NAV ── */
+function showStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goBack() {
+  enteredPin = '';
+  selectedStaff = null;
+  showStep('step-pick');
+}
+
+function showEmpty(title, msg) {
+  document.getElementById('staff-grid').innerHTML = `
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="emoji">⚠️</div>
+      <h3>${title}</h3>
+      <p>${msg}</p>
+    </div>`;
+}
+</script>
+</body>
+</html>
