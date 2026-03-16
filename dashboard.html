@@ -2954,89 +2954,45 @@ function renderDowChart(orders) {
 
 
 /* ══════════════════════════════════════
-   STAFF MANAGEMENT
-══════════════════════════════════════ */
-async function loadStaff() {
-  if (!restaurantId) return;
-  const { data, error } = await sb
-    .from('restaurant_staff')
-    .select('*')
-    .eq('restaurant_id', restaurantId)
-    .eq('is_active', true)
-    .order('created_at', { ascending: true });
-
-  const list = document.getElementById('staff-list');
-  if (!list) return;
-
-  if (error || !data || data.length === 0) {
-    list.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:28px">কোনো স্টাফ নেই — উপরে যোগ করুন</div>';
-    return;
-  }
-
-  const roleLabel = { waiter:'🙋 Waiter', kitchen:'👨‍🍳 Kitchen', cashier:'💰 Cashier' };
-  const roleColor = { waiter:'rgba(59,130,246,0.1)', kitchen:'rgba(249,115,22,0.1)', cashier:'rgba(168,85,247,0.1)' };
-  const roleBorder= { waiter:'rgba(59,130,246,0.25)', kitchen:'rgba(249,115,22,0.25)', cashier:'rgba(168,85,247,0.25)' };
-  const roleText  = { waiter:'#3B82F6', kitchen:'#F97316', cashier:'#A855F7' };
-
-  list.innerHTML = data.map(s => `
-    <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
-      <div style="width:42px;height:42px;border-radius:12px;background:${roleColor[s.role]};border:1.5px solid ${roleBorder[s.role]};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">
-        ${ s.role==='kitchen'?'👨‍🍳': s.role==='cashier'?'💰':'🙋' }
-      </div>
-      <div style="flex:1;min-width:120px">
-        <div style="font-size:15px;font-weight:800;color:var(--text)">${s.name}</div>
-        <div style="font-size:12px;font-weight:700;color:${roleText[s.role]};margin-top:2px">${roleLabel[s.role]||s.role}</div>
-      </div>
-      <div style="background:rgba(0,0,0,0.05);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--text2);letter-spacing:4px">
-        PIN: ${'•'.repeat(s.pin.length)}
-      </div>
-      <button onclick="removeStaff('${s.id}')" style="width:34px;height:34px;border-radius:8px;background:rgba(220,38,38,0.07);border:1.5px solid rgba(220,38,38,0.2);color:var(--error);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Jost',sans-serif;transition:all .15s" title="Remove staff">✕</button>
-    </div>
-  `).join('');
-}
-
-async function addStaff() {
+   async function addStaff() {
   const name = document.getElementById('staff-name').value.trim();
   const role = document.getElementById('staff-role').value;
   const pin  = document.getElementById('staff-pin').value.trim();
 
   if (!name) { showToast('Name দিন'); return; }
   if (!/^[0-9]{4}$/.test(pin)) { showToast('৪ সংখ্যার PIN দিন'); return; }
-  if (!restaurantId) return;
+  if (!restaurantId) {
+    showToast('Restaurant ID পাওয়া যায়নি');
+    return;
+  }
 
-  const { error } = await sb.from('restaurant_staff').insert({
+  setBtnLoading('add-staff-btn', true); // Visual feedback
+
+  const { error } = await sb.from('restaurant_staff').insert([{
     restaurant_id: restaurantId,
-    name, role, pin
-  });
+    name, 
+    role, 
+    pin,
+    is_active: true // Explicitly set active
+  }], { count: 'minimal' }); // <--- THIS is the critical fix for RLS issues
 
-  if (error) { showToast('Error: ' + error.message); return; }
+  setBtnLoading('add-staff-btn', false);
+
+  if (error) { 
+    console.error("Supabase Error:", error);
+    showToast('Error: ' + error.message); 
+    return; 
+  }
 
   showToast('✅ ' + name + ' যোগ হয়েছে!');
+  
+  // Clear inputs
   document.getElementById('staff-name').value = '';
   document.getElementById('staff-pin').value = '';
+  
+  // Refresh the UI list
   loadStaff();
 }
-
-async function removeStaff(id) {
-  if (!confirm('এই স্টাফকে সরাবেন?')) return;
-  await sb.from('restaurant_staff').update({ is_active: false }).eq('id', id);
-  showToast('স্টাফ সরানো হয়েছে');
-  loadStaff();
-}
-
-function copyStaffLink() {
-  const link = document.getElementById('staff-link-display')?.textContent;
-  if (!link || link === 'Loading...') return;
-  navigator.clipboard.writeText(link).then(() => showToast('📋 লিংক কপি হয়েছে!'));
-}
-
-function setStaffLink(slug) {
-  const el = document.getElementById('staff-link-display');
-  if (el) el.textContent = window.location.origin + '/staff-login.html?r=' + slug;
-}
-
-</script>
-
 <!-- Plan limit modal -->
 <div class="modal-overlay" id="modal-limit-modal" onclick="closeModal('limit-modal')">
   <div class="modal-box" onclick="event.stopPropagation()" style="max-width:400px;text-align:center;padding:40px 32px">
