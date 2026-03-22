@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Waiter View — MenuQR</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;600;700;800;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#2C742F;--green2:#1E5621;--green3:#3A9E3F;
+  --grad:linear-gradient(135deg,#2C742F,#3A9E3F);
+  --orange:#E8620A;
+  --bg:#0D0D0D;--bg2:#141414;--surface:#1C1C1C;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.05);
+  --text:#F1F5F9;--text2:#94A3B8;--muted:#475569;
+  --new-bg:rgba(59,130,246,0.1);--new-text:#93C5FD;--new-dim:rgba(59,130,246,0.25);
+  --prep-bg:rgba(249,115,22,0.1);--prep-text:#FDB87A;--prep-dim:rgba(249,115,22,0.25);
+  --ready-bg:rgba(34,197,94,0.1);--ready-text:#86EFAC;--ready-dim:rgba(34,197,94,0.25);
+  --done-bg:rgba(148,163,184,0.06);--done-text:#94A3B8;
+  --error:#EF4444;
+}
+html,body{height:100%;font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+#topbar{
+  background:#080808;border-bottom:1px solid rgba(44,116,47,0.2);
+  padding:0 16px;display:flex;align-items:center;gap:12px;
+  height:60px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 20px rgba(0,0,0,0.6);
+}
+.tb-logo{width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.tb-brand{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+.tb-brand span{color:var(--green3)}
+.tb-sep{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.tb-who{flex:1}
+.tb-who-name{font-size:14px;font-weight:800;color:var(--text)}
+.tb-who-role{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.08em}
+.tb-rest{font-size:12px;font-weight:600;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;animation:livePulse 1.5s ease-in-out infinite;flex-shrink:0}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+
+/* ── FILTER TABS ── */
+.filter-bar{
+  background:#0A0A0A;border-bottom:1px solid var(--border);
+  padding:10px 14px;display:flex;gap:8px;overflow-x:auto;
+  scrollbar-width:none;position:sticky;top:60px;z-index:90;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Jost',sans-serif;white-space:nowrap}
+.filter-tab.active{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 3px 10px rgba(44,116,47,0.3)}
+.filter-tab .tab-count{display:inline-block;background:rgba(255,255,255,0.15);border-radius:20px;padding:1px 7px;font-size:11px;margin-left:5px}
+
+/* ── ORDER CARDS ── */
+#orders-wrap{padding:14px;display:flex;flex-direction:column;gap:10px}
+
+.order-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;transition:all .2s}
+.order-card.status-new{border-color:var(--new-dim)}
+.order-card.status-preparing{border-color:var(--prep-dim)}
+.order-card.status-ready{border-color:var(--ready-dim);box-shadow:0 4px 20px rgba(34,197,94,0.12)}
+.order-card.status-confirmed{border-color:rgba(99,102,241,0.3)}
+
+.card-head{display:flex;align-items:center;gap:10px;padding:14px 14px 10px}
+.card-table{font-size:22px;font-weight:900;color:var(--text);letter-spacing:-0.02em}
+.card-order-num{font-size:12px;font-weight:700;color:var(--muted)}
+.card-time{font-size:12px;font-weight:700;color:var(--muted);margin-left:auto}
+.card-status-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;flex-shrink:0}
+.status-new .card-status-badge{background:var(--new-bg);color:var(--new-text)}
+.status-confirmed .card-status-badge{background:rgba(99,102,241,0.1);color:#A5B4FC}
+.status-preparing .card-status-badge{background:var(--prep-bg);color:var(--prep-text)}
+.status-ready .card-status-badge{background:var(--ready-bg);color:var(--ready-text)}
+
+.card-items{padding:0 14px 12px;display:flex;flex-direction:column;gap:4px}
+.card-item-row{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text)}
+.card-item-qty{color:var(--orange);font-size:16px;font-weight:900;min-width:24px}
+.card-item-name{flex:1}
+.card-note{margin:0 14px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text2);font-style:italic}
+.card-total{padding:8px 14px;border-top:1px solid var(--border);font-size:13px;font-weight:800;color:var(--text2);display:flex;justify-content:space-between;align-items:center}
+.card-total-amt{font-size:16px;font-weight:900;color:var(--text)}
+
+/* ── READY GLOW ── */
+.status-ready .card-head{background:rgba(34,197,94,0.04)}
+
+/* ── ACTION ROW ── */
+.card-actions{padding:10px 14px 14px;display:flex;gap:8px}
+.act-btn{flex:1;padding:11px 10px;border-radius:11px;border:none;font-size:13px;font-weight:800;cursor:pointer;font-family:'Jost',sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.act-btn:active{transform:scale(0.97)}
+.act-serve{background:var(--grad);color:#fff;box-shadow:0 3px 10px rgba(44,116,47,0.3)}
+.act-serve:hover{box-shadow:0 5px 16px rgba(44,116,47,0.4)}
+.act-bill{background:rgba(249,115,22,0.1);color:var(--prep-text);border:1.5px solid var(--prep-dim)}
+.act-bill:hover{background:rgba(249,115,22,0.18)}
+.act-paid{background:rgba(148,163,184,0.08);color:var(--muted);border:1.5px solid var(--border)}
+
+/* ── EMPTY / LOADING ── */
+.empty-wrap{text-align:center;padding:60px 24px}
+.empty-emoji{font-size:52px;margin-bottom:16px}
+.empty-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px}
+.empty-sub{font-size:14px;color:var(--muted)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1E293B;color:#F1F5F9;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:700;transition:transform .3s;z-index:999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.5);pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── NEW ORDER FLASH ── */
+#new-flash{position:fixed;top:60px;left:0;right:0;background:linear-gradient(90deg,#1A3A8A,#1D4ED8);padding:10px 16px;display:none;align-items:center;gap:10px;z-index:200;animation:flashIn .3s ease}
+@keyframes flashIn{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+#new-flash.show{display:flex}
+.flash-text{font-size:14px;font-weight:800;color:#fff;flex:1}
+.flash-close{background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif}
+
+@media(max-width:400px){
+  .card-table{font-size:18px}
+  .act-btn{font-size:12px;padding:10px 8px}
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div id="topbar">
+  <img class="tb-logo" src="menuqr-logo.svg" alt="MenuQR">
+  <div class="tb-sep"></div>
+  <div class="tb-who">
+    <div class="tb-who-name" id="tb-name">Staff</div>
+    <div class="tb-who-role" id="tb-role">Waiter</div>
+  </div>
+  <div class="live-dot" id="live-dot" style="background:#EF4444"></div>
+  <div class="tb-rest" id="tb-rest">Loading...</div>
+</div>
+
+<!-- New order flash -->
+<div id="new-flash">
+  <span class="flash-text" id="flash-text">🔔 নতুন অর্ডার!</span>
+  <button class="flash-close" onclick="hideFlash()">✓ দেখলাম</button>
+</div>
+
+<!-- Filter tabs -->
+<div class="filter-bar" id="filter-bar">
+  <!-- Rendered by JS based on role -->
+</div>
+
+<!-- Orders -->
+<div id="orders-wrap">
+  <div class="empty-wrap">
+    <div class="empty-emoji">⏳</div>
+    <div class="empty-title">লোড হচ্ছে...</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://jkskdvvisfmezcqvamfy.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imprc2tkdnZpc2ZtZXpjcXZhbWZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2OTYzNzMsImV4cCI6MjA4ODI3MjM3M30.AxQwKmgaMdRcGyVXDPkZwnjTTqWk9nku0EvCpE37Ve4';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const params = new URLSearchParams(window.location.search);
+const restaurantSlug = params.get('r') || '';
+const staffName = decodeURIComponent(params.get('name') || 'Staff');
+const isCashier = params.get('mode') === 'cashier';
+
+let restaurantId = '';
+let orders = [];
+let currentFilter = isCashier ? 'served' : 'ready';
+let prevReadyIds = new Set();
+
+/* ── STATUS LABELS ── */
+const STATUS_LABEL = {
+  new:'নতুন', confirmed:'কনফার্ম', preparing:'রান্না হচ্ছে',
+  ready:'রেডি ✅', served:'সার্ভ হয়েছে', completed:'সম্পন্ন'
+};
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('tb-name').textContent = staffName;
+  document.getElementById('tb-role').textContent = isCashier ? 'Cashier 💰' : 'Waiter 🙋';
+
+  // Build filter bar based on role
+  buildFilterBar();
+
+  if (!restaurantSlug) { showEmpty('লিংক সমস্যা', 'ড্যাশবোর্ড থেকে সঠিক লিংক নিন'); return; }
+
+  const { data } = await sb.from('restaurants').select('id,name').eq('slug', restaurantSlug).maybeSingle();
+  if (!data) { showEmpty('রেস্টুরেন্ট পাওয়া যায়নি', ''); return; }
+
+  restaurantId = data.id;
+  document.getElementById('tb-rest').textContent = data.name;
+  document.title = data.name + ' — ' + (isCashier ? 'Cashier' : 'Waiter');
+
+  await fetchOrders();
+  startRealtime();
+  setInterval(fetchOrders, 15000);
+  document.getElementById('live-dot').style.background = '#22C55E';
+});
+
+/* ── BUILD FILTER BAR BY ROLE ── */
+function buildFilterBar() {
+  const bar = document.getElementById('filter-bar');
+  if (isCashier) {
+    // Cashier: served + completed
+    bar.innerHTML = `
+      <button class="filter-tab active" onclick="setFilter('served',this)">💰 Payment Pending <span class="tab-count" id="cnt-served">0</span></button>
+      <button class="filter-tab" onclick="setFilter('completed',this)">✅ Completed <span class="tab-count" id="cnt-completed">0</span></button>
+      <button class="filter-tab" onclick="setFilter('all',this)">📋 All <span class="tab-count" id="cnt-all">0</span></button>`;
+  } else {
+    // Waiter: ready to serve (main job) + served history
+    bar.innerHTML = `
+      <button class="filter-tab active" onclick="setFilter('ready',this)">🍽️ Serve করুন <span class="tab-count" id="cnt-ready">0</span></button>
+      <button class="filter-tab" onclick="setFilter('served',this)">✅ Served <span class="tab-count" id="cnt-served">0</span></button>
+      <button class="filter-tab" onclick="setFilter('all',this)">📋 All Orders <span class="tab-count" id="cnt-all">0</span></button>`;
+  }
+}
+
+/* ── FETCH ── */
+async function fetchOrders() {
+  if (!restaurantId) return;
+  const { data, error } = await sb
+    .from('orders')
+    .select('*, order_items(item_name, quantity, item_name_bn)')
+    .eq('restaurant_id', restaurantId)
+    .in('status', ['new','confirmed','preparing','ready','served','completed'])
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (error || !data) return;
+
+  // Detect newly READY orders → alert waiter
+  if (!isCashier) {
+    const newReadyIds = new Set(data.filter(o => o.status === 'ready').map(o => o.id));
+    if (prevReadyIds.size > 0) {
+      for (const id of newReadyIds) {
+        if (!prevReadyIds.has(id)) {
+          showReadyAlert();
+          break;
+        }
+      }
+    }
+    prevReadyIds = newReadyIds;
+  }
+
+  orders = data;
+  updateCounts();
+  renderOrders();
+}
+
+/* ── READY ALERT for Waiter ── */
+function showReadyAlert() {
+  const el = document.getElementById('new-flash');
+  document.getElementById('flash-text').textContent = '🍽️ খাবার রেডি! টেবিলে দিয়ে আসুন';
+  el.style.background = 'linear-gradient(90deg,#166534,#16A34A)';
+  el.classList.add('show');
+  // Beep
+  try {
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 660;
+    g.gain.setValueAtTime(0.4, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    o.start(); o.stop(ctx.currentTime + 0.6);
+  } catch(e){}
+  setTimeout(() => hideFlash(), 10000);
+}
+
+/* ── RENDER ── */
+function renderOrders() {
+  const wrap = document.getElementById('orders-wrap');
+  let filtered = orders;
+
+  if (currentFilter === 'ready') {
+    filtered = orders.filter(o => o.status === 'ready');
+  } else if (currentFilter === 'served') {
+    filtered = orders.filter(o => o.status === 'served');
+  } else if (currentFilter === 'completed') {
+    filtered = orders.filter(o => o.status === 'completed');
+  }
+  // 'all' = everything
+
+  if (!filtered.length) {
+    const emptyMsg = {
+      ready: { icon:'🕐', title:'এখন কোনো রেডি অর্ডার নেই', sub:'কিচেন রেডি করলে এখানে দেখাবে' },
+      served: { icon:'✅', title:'কোনো served অর্ডার নেই', sub:'' },
+      completed: { icon:'💰', title:'কোনো completed অর্ডার নেই', sub:'' },
+      all: { icon:'🍽️', title:'কোনো অর্ডার নেই', sub:'কাস্টমার অর্ডার দিলে দেখাবে' },
+    };
+    const m = emptyMsg[currentFilter] || emptyMsg.all;
+    wrap.innerHTML = `
+      <div class="empty-wrap">
+        <div class="empty-emoji">${m.icon}</div>
+        <div class="empty-title">${m.title}</div>
+        <div class="empty-sub">${m.sub}</div>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = filtered.map(o => {
+    const items = o.order_items || [];
+    const timeAgo = getTimeAgo(o.created_at);
+    const total = parseFloat(o.total || 0).toFixed(0);
+    const statusCls = 'status-' + o.status;
+    const orderNum = o.order_number || ('#' + o.id.slice(0,6));
+
+    const itemsHtml = items.map(i => `
+      <div class="card-item-row">
+        <span class="card-item-qty">×${i.quantity}</span>
+        <span class="card-item-name">${i.item_name_bn || i.item_name}</span>
+      </div>`).join('');
+
+    const noteHtml = o.special_note
+      ? `<div class="card-note">📝 ${o.special_note}</div>` : '';
+
+    // ── ACTION BUTTONS based on role + status ──
+    let actionsHtml = '';
+
+    if (!isCashier) {
+      // WAITER: শুধু ready order serve করতে পারবে
+      if (o.status === 'ready') {
+        actionsHtml = `
+          <div class="card-actions">
+            <button class="act-btn act-serve" onclick="markServed('${o.id}')">
+              🍽️ টেবিলে দিলাম
+            </button>
+          </div>`;
+      } else if (['new','confirmed','preparing'].includes(o.status)) {
+        // Waiter শুধু দেখতে পাবে — কোনো action নেই
+        actionsHtml = `
+          <div class="card-actions">
+            <div style="width:100%;text-align:center;padding:10px;font-size:13px;color:var(--muted);font-weight:700">
+              ⏳ কিচেনে রান্না হচ্ছে...
+            </div>
+          </div>`;
+      }
+    } else {
+      // CASHIER: served order-এ payment নেবে
+      if (o.status === 'served') {
+        actionsHtml = `
+          <div class="card-actions">
+            <button class="act-btn act-bill" onclick="markPaid('${o.id}')">
+              💰 ৳${total} — পেমেন্ট নিলাম
+            </button>
+          </div>`;
+      }
+    }
+
+    return `
+      <div class="order-card ${statusCls}" id="card-${o.id}">
+        <div class="card-head">
+          <div>
+            <div class="card-table">টেবিল ${o.table_number}</div>
+            <div class="card-order-num">${orderNum} · ${items.length} আইটেম</div>
+          </div>
+          <div class="card-status-badge">${STATUS_LABEL[o.status]||o.status}</div>
+          <div class="card-time">${timeAgo}</div>
+        </div>
+        <div class="card-items">${itemsHtml}</div>
+        ${noteHtml}
+        <div class="card-total">
+          <span>মোট</span>
+          <span class="card-total-amt">৳${total}</span>
+        </div>
+        ${actionsHtml}
+      </div>`;
+  }).join('');
+}
+
+/* ── UPDATE COUNTS ── */
+function updateCounts() {
+  const setCnt = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setCnt('cnt-ready',     orders.filter(o=>o.status==='ready').length);
+  setCnt('cnt-served',    orders.filter(o=>o.status==='served').length);
+  setCnt('cnt-completed', orders.filter(o=>o.status==='completed').length);
+  setCnt('cnt-all',       orders.length);
+}
+
+/* ── ACTIONS ── */
+async function markServed(id) {
+  const btn = document.querySelector(`[onclick="markServed('${id}')"]`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+  const { error } = await sb.from('orders').update({ status: 'served' }).eq('id', id);
+  if (error) { showToast('❌ Error: ' + error.message); if(btn){btn.disabled=false;btn.textContent='🍽️ টেবিলে দিলাম';} return; }
+  showToast('✅ সার্ভ করা হয়েছে!');
+  await fetchOrders();
+}
+
+async function markPaid(id) {
+  const btn = document.querySelector(`[onclick="markPaid('${id}')"]`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+  const { error } = await sb.from('orders').update({ status: 'completed' }).eq('id', id);
+  if (error) { showToast('❌ Error: ' + error.message); return; }
+  showToast('💰 পেমেন্ট নেওয়া হয়েছে!');
+  await fetchOrders();
+}
+
+/* ── FILTER ── */
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderOrders();
+}
+
+/* ── REALTIME ── */
+function startRealtime() {
+  sb.channel('waiter-orders-' + restaurantId)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'orders',
+      filter: `restaurant_id=eq.${restaurantId}`
+    }, () => fetchOrders())
+    .subscribe(status => {
+      document.getElementById('live-dot').style.background =
+        status === 'SUBSCRIBED' ? '#22C55E' : '#EF4444';
+    });
+}
+
+/* ── FLASH ── */
+function showNewFlash() { showReadyAlert(); }
+function hideFlash() { document.getElementById('new-flash').classList.remove('show'); }
+
+/* ── HELPERS ── */
+function getTimeAgo(ts) {
+  const mins = Math.floor((Date.now() - new Date(ts)) / 60000);
+  if (mins < 1) return 'এখনই';
+  if (mins < 60) return mins + 'মিনিট আগে';
+  return Math.floor(mins/60) + 'ঘণ্টা আগে';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showEmpty(title, sub) {
+  document.getElementById('orders-wrap').innerHTML = `
+    <div class="empty-wrap">
+      <div class="empty-emoji">⚠️</div>
+      <div class="empty-title">${title}</div>
+      <div class="empty-sub">${sub}</div>
+    </div>`;
+}
+</script>
+</body>
+</html>
