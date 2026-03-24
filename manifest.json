@@ -1,0 +1,22 @@
+{
+  "name": "MenuQR Waiter",
+  "short_name": "Waiter",
+  "description": "MenuQR Waiter — অর্ডার notification",
+  "start_url": "/waiter.html",
+  "display": "standalone",
+  "background_color": "#0D0D0D",
+  "theme_color": "#2C742F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/menuqr-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "bn",
+  "dir": "ltr",
+  "categories": ["food", "productivity"],
+  "screenshots": []
+}

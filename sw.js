@@ -1,59 +1,61 @@
-/* ═══════════════════════════════════════════════════
-   MenuQR Service Worker — Web Push Notifications
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   MenuQR Service Worker — FCM + Web Push
+   ═══════════════════════════════════════════════ */
 
-const CACHE_NAME = 'menuqr-v1';
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-/* ── INSTALL ── */
-self.addEventListener('install', e => {
-  self.skipWaiting();
-});
+/* ── FIREBASE CONFIG — Step 6 এ আপনার values দিন ── */
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
 
-/* ── ACTIVATE ── */
-self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
-});
+firebase.initializeApp(FIREBASE_CONFIG);
+const messaging = firebase.messaging();
 
-/* ── PUSH EVENT — notification দেখাও ── */
-self.addEventListener('push', e => {
-  if (!e.data) return;
+/* ── BACKGROUND MESSAGE — FCM push ── */
+messaging.onBackgroundMessage(payload => {
+  console.log('[SW] Background message:', payload);
 
-  let data = {};
-  try { data = e.data.json(); } catch(err) { data = { title: 'MenuQR', body: e.data.text() }; }
-
-  const title   = data.title   || 'MenuQR';
+  const data    = payload.data || payload.notification || {};
+  const title   = data.title   || 'MenuQR 🍽️';
   const body    = data.body    || 'নতুন notification';
-  const icon    = data.icon    || '/menuqr-logo.svg';
-  const badge   = data.badge   || '/menuqr-logo.svg';
   const tag     = data.tag     || 'menuqr-' + Date.now();
   const url     = data.url     || '/waiter.html';
-  const vibrate = data.vibrate || [200, 100, 200, 100, 200];
 
-  e.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon,
-      badge,
-      tag,
-      vibrate,
-      requireInteraction: data.requireInteraction || false,
-      data: { url },
-    })
-  );
+  return self.registration.showNotification(title, {
+    body,
+    icon:    '/menuqr-logo.svg',
+    badge:   '/menuqr-logo.svg',
+    tag,
+    vibrate: [300, 100, 300, 100, 600],
+    requireInteraction: true,
+    data: { url },
+    actions: [
+      { action: 'open', title: '✅ দেখলাম' },
+    ]
+  });
 });
 
-/* ── NOTIFICATION CLICK — page খোলো ── */
+/* ── NOTIFICATION CLICK ── */
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = e.notification.data?.url || '/waiter.html';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      for (const client of list) {
-        if (client.url.includes(url.split('?')[0]) && 'focus' in client) {
-          return client.focus();
-        }
+      for (const c of list) {
+        if (c.url.includes('waiter') && 'focus' in c) return c.focus();
       }
       if (clients.openWindow) return clients.openWindow(url);
     })
   );
 });
+
+/* ── INSTALL / ACTIVATE ── */
+self.addEventListener('install',  () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(clients.claim()));
