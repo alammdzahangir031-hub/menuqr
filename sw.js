@@ -6,14 +6,15 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 /* ── FIREBASE CONFIG — Step 6 এ আপনার values দিন ── */
-const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+const firebaseConfig = {
+  apiKey: "AIzaSyC0kYmhddaXRUUYJyUpI9Kllg7IAHn4mks",
+  authDomain: "menuqr-waiter.firebaseapp.com",
+  projectId: "menuqr-waiter",
+  storageBucket: "menuqr-waiter.firebasestorage.app",
+  messagingSenderId: "828792214892",
+  appId: "1:828792214892:web:98638e7cfb5b435bcb8f49"
 };
+
 
 firebase.initializeApp(FIREBASE_CONFIG);
 const messaging = firebase.messaging();
