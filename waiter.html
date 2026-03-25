@@ -744,15 +744,17 @@ function urlBase64ToUint8Array(base64String) {
 ══════════════════════════════════ */
 
 /* ── REPLACE THESE WITH YOUR FIREBASE CONFIG ── */
-const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+const firebaseConfig = {
+  apiKey: "AIzaSyC0kYmhddaXRUUYJyUpI9Kllg7IAHn4mks",
+  authDomain: "menuqr-waiter.firebaseapp.com",
+  projectId: "menuqr-waiter",
+  storageBucket: "menuqr-waiter.firebasestorage.app",
+  messagingSenderId: "828792214892",
+  appId: "1:828792214892:web:98638e7cfb5b435bcb8f49"
 };
-const FIREBASE_VAPID_KEY = "YOUR_VAPID_KEY"; // From Firebase Console → Project Settings → Cloud Messaging
+
+const FIREBASE_VAPID_KEY = "BPlWEpUIaJtM1-zZb8UfDKSHygr5gGNxZL-pUINNxI0GP0rx6MMr4fqXj1JmaaXifsiZ49mrpKxYAJTWmkhw49U
+"; // From Firebase Console → Project Settings → Cloud Messaging
 
 let _firebaseApp = null;
 let _fcmMessaging = null;
